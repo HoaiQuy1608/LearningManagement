@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import '../../providers/auth_provider.dart'; // Import "Bộ não"
 
-class RegisterScreen extends StatefulWidget {
+// 1. Đổi thành ConsumerStatefulWidget
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
+  // 2. Đổi thành ConsumerState
   _RegisterScreenState createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+// 3. Đổi thành ConsumerState
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  // Các state "nội bộ" của View (giữ nguyên)
   final _formKey = GlobalKey<FormState>();
   final _accountController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -21,8 +27,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  // Hàm xử lý logic
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    final success = await ref
+        .read(authProvider.notifier)
+        .register(
+          _accountController.text.trim(),
+          _passwordController.text.trim(),
+        );
+
+    // 6. Xử lý kết quả (Logic của View)
+    if (success && mounted) {
+      Navigator.pop(context); // Quay về màn hình Đăng nhập
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
       appBar: AppBar(title: Text('Đăng ký tài khoản')),
       body: SingleChildScrollView(
@@ -51,12 +77,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Vui lòng nhập thông tin';
-                  }
-                  return null;
-                },
+                validator: (value) => (value == null || value.isEmpty)
+                    ? 'Vui lòng nhập thông tin'
+                    : null,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16.0),
@@ -75,11 +98,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? Icons.visibility_off
                           : Icons.visibility,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
                 validator: (value) {
@@ -110,11 +130,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? Icons.visibility_off
                           : Icons.visibility,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
+                    onPressed: () => setState(
+                      () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                    ),
                   ),
                 ),
                 validator: (value) {
@@ -128,34 +146,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               const SizedBox(height: 24.0),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    print('Đăng ký thành công');
-                    print('Email: ${_accountController.text}');
-                    print('Mật khẩu:${_passwordController.text}');
-                  } else {
-                    print('Lỗi xác thực');
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  textStyle: const TextStyle(fontSize: 16.0),
+
+              // 8. Hiển thị Lỗi (nếu có)
+              if (authState.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    authState.errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                child: const Text('Đăng ký'),
-              ),
+              authState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _handleRegister, // Gọi hàm xử lý
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        textStyle: const TextStyle(fontSize: 16.0),
+                      ),
+                      child: const Text('Đăng ký'),
+                    ),
+
               const SizedBox(height: 16.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text('Đã có tài khoản?'),
                   TextButton(
-                    onPressed: () {
-                      print('Quay về màn hình đăng nhập');
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
                       foregroundColor: Theme.of(context).primaryColor,
                       textStyle: const TextStyle(fontWeight: FontWeight.bold),

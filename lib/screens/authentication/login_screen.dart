@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
 import 'register_screen.dart';
-import 'package:learningmanagement/screens/home/home_screen.dart';
+import '../home/home_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+// 1. Đổi thành ConsumerStatefulWidget
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  // 2. Đổi thành ConsumerState
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+// 3. Đổi thành ConsumerState
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  // Các state "nội bộ" của View (giữ nguyên)
   final _formKey = GlobalKey<FormState>();
   final _accountController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -22,8 +28,31 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Hàm xử lý logic đăng nhập
+  Future<void> _handleLogin() async {
+    // 4. Validate Form (Logic của View)
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // 5. "Ra lệnh" cho "Bộ não"
+    final success = await ref
+        .read(authProvider.notifier)
+        .login(_accountController.text.trim(), _passwordController.text.trim());
+
+    // 6. Xử lý kết quả
+    if (success && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
       appBar: AppBar(title: Text('Đăng nhập')),
       body: SingleChildScrollView(
@@ -52,12 +81,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person_outline),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Vui lòng nhập thông tin';
-                  }
-                  return null;
-                },
+                validator: (value) => (value == null || value.isEmpty)
+                    ? 'Vui lòng nhập thông tin'
+                    : null,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16.0),
@@ -74,60 +100,53 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? Icons.visibility_off
                           : Icons.visibility,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Vui lòng nhập mật khẩu';
-                  }
-                  return null;
-                },
+                validator: (value) => (value == null || value.isEmpty)
+                    ? 'Vui lòng nhập mật khẩu'
+                    : null,
               ),
               const SizedBox(height: 24.0),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    print('Đăng nhập thành công');
-                    print('Email: ${_accountController.text}');
-                    print('Mật khẩu: ${_passwordController.text}');
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
-                    );
-                  } else {
-                    print('Lỗi xác thực');
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  textStyle: const TextStyle(fontSize: 16.0),
+
+              // 8. Hiển thị Lỗi (nếu có)
+              if (authState.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    authState.errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                child: const Text('Đăng nhập'),
-              ),
+
+              // 9. Hiển thị Loading HOẶC Nút bấm
+              authState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _handleLogin, // Gọi hàm xử lý
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        textStyle: const TextStyle(fontSize: 16.0),
+                      ),
+                      child: const Text('Đăng nhập'),
+                    ),
+
               const SizedBox(height: 16.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text('Chưa có tài khoản?'),
                   TextButton(
-                    onPressed: () {
-                      print('Chuyển sang hướng màn hình đăng ký');
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterScreen(),
+                      ),
+                    ),
                     style: TextButton.styleFrom(
                       foregroundColor: Theme.of(context).primaryColor,
                       textStyle: const TextStyle(fontWeight: FontWeight.bold),
