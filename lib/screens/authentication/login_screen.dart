@@ -4,18 +4,14 @@ import '../../providers/auth_provider.dart';
 import 'register_screen.dart';
 import '../home/home_screen.dart';
 
-// 1. Đổi thành ConsumerStatefulWidget
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  // 2. Đổi thành ConsumerState
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-// 3. Đổi thành ConsumerState
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  // Các state "nội bộ" của View (giữ nguyên)
   final _formKey = GlobalKey<FormState>();
   final _accountController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -28,19 +24,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  // Hàm xử lý logic đăng nhập
   Future<void> _handleLogin() async {
-    // 4. Validate Form (Logic của View)
     if (!_formKey.currentState!.validate()) {
       return;
     }
-
-    // 5. "Ra lệnh" cho "Bộ não"
     final success = await ref
         .read(authProvider.notifier)
         .login(_accountController.text.trim(), _passwordController.text.trim());
-
-    // 6. Xử lý kết quả
     if (success && mounted) {
       Navigator.pushReplacement(
         context,

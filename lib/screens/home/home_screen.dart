@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:learningmanagement/providers/home_provider.dart';
 import 'package:learningmanagement/screens/scheduler/scheduler_screen.dart';
 import 'package:learningmanagement/screens/home/profile_screen.dart';
 import 'package:learningmanagement/screens/quiz/quiz_list_screen.dart';
 import 'package:learningmanagement/screens/documents/document_list_screen.dart';
 import 'package:learningmanagement/screens/forum/forum_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
     SchedulerScreen(),
@@ -23,17 +18,11 @@ class _HomeScreenState extends State<HomeScreen> {
     ProfileScreen(),
   ];
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedIndex = ref.watch(homeProvider);
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: [..._widgetOptions]),
-
+      body: IndexedStack(index: selectedIndex, children: _widgetOptions),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -48,12 +37,12 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Diễn đàn'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Hồ sơ'),
         ],
-        currentIndex: _selectedIndex,
+        currentIndex: selectedIndex,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
-        onTap: _onItemTapped,
+        onTap: (index) => ref.read(homeProvider.notifier).onTabChange(index),
       ),
     );
   }

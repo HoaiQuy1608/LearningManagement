@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 
-// 1. "Khuôn" cho State (Trạng thái)
 @immutable
 class AuthState {
   final bool isLoading;
@@ -22,25 +21,24 @@ class AuthProvider extends Notifier<AuthState> {
   // Hàm tạo state ban đầu
   @override
   AuthState build() {
-    return const AuthState(); // Ban đầu: không loading, không lỗi
+    return const AuthState();
   }
 
   // 3. Hàm Login (Trả về Future<bool>)
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    // Giả lập logic
     await Future.delayed(const Duration(seconds: 2));
 
     if (email == "test@gmail.com") {
       state = state.copyWith(isLoading: false);
-      return true; // Báo thành công
+      return true;
     } else {
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Tài khoản hoặc mật khẩu không đúng',
       );
-      return false; // Báo thất bại
+      return false;
     }
   }
 
@@ -54,15 +52,15 @@ class AuthProvider extends Notifier<AuthState> {
         isLoading: false,
         errorMessage: 'Email đã được sử dụng',
       );
-      return false; // Báo thất bại
+      return false;
     } else {
       state = state.copyWith(isLoading: false);
-      return true; // Báo thành công
+      return true;
     }
   }
 }
 
-// 5. "Chìa khóa" (Provider)
+// 5. Provider để sử dụng trong UI
 final authProvider = NotifierProvider<AuthProvider, AuthState>(() {
   return AuthProvider();
 });

@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
-import '../../providers/auth_provider.dart'; // Import "Bộ não"
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
 
-// 1. Đổi thành ConsumerStatefulWidget
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  // 2. Đổi thành ConsumerState
   _RegisterScreenState createState() => _RegisterScreenState();
 }
 
-// 3. Đổi thành ConsumerState
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  // Các state "nội bộ" của View (giữ nguyên)
   final _formKey = GlobalKey<FormState>();
   final _accountController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -27,7 +23,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  // Hàm xử lý logic
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -38,10 +33,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           _accountController.text.trim(),
           _passwordController.text.trim(),
         );
-
-    // 6. Xử lý kết quả (Logic của View)
     if (success && mounted) {
-      Navigator.pop(context); // Quay về màn hình Đăng nhập
+      Navigator.pop(context);
     }
   }
 
@@ -146,8 +139,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 },
               ),
               const SizedBox(height: 24.0),
-
-              // 8. Hiển thị Lỗi (nếu có)
               if (authState.errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
@@ -160,7 +151,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               authState.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
-                      onPressed: _handleRegister, // Gọi hàm xử lý
+                      onPressed: _handleRegister,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
