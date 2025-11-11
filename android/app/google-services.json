@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "320332578533",
+    "firebase_url": "https://study-1084a-default-rtdb.firebaseio.com",
+    "project_id": "study-1084a",
+    "storage_bucket": "study-1084a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:320332578533:android:4dc6badc9ebd7485525e0c",
+        "android_client_info": {
+          "package_name": "com.example.learningmanagement"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVbgdTtVa1JGgGruze5WPHBUWkc0p0lqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

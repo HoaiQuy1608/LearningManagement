@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:learningmanagement/providers/scheduler_provider.dart';
-import 'package:learningmanagement/screens/scheduler/add_event_screen.dart';
+import 'package:learningmanagement/screens/Student_screens/scheduler/add_event_screen.dart';
 
 class SchedulerScreen extends ConsumerStatefulWidget {
   const SchedulerScreen({super.key});
