@@ -76,7 +76,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               ),
               const SizedBox(height: 16.0),
               DropdownButtonFormField<String>(
-                value: _selectedEventType,
+                initialValue: _selectedEventType,
                 hint: const Text('Chọn loại sự kiện'),
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
@@ -110,7 +110,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               ),
               const SizedBox(height: 16.0),
               DropdownButtonFormField<String>(
-                value: _selectedReminder,
+                initialValue: _selectedReminder,
                 hint: const Text('Nhắc trước'),
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),

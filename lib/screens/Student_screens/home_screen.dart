@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/home_provider.dart';
 import 'package:learningmanagement/screens/Student_screens/scheduler/scheduler_screen.dart';
 import 'package:learningmanagement/screens/Student_screens/profile_screen.dart';
-import 'package:learningmanagement/screens/Student_screens/quiz_list_screen.dart';
-import 'package:learningmanagement/screens/Student_screens/document_list_screen.dart';
+import 'package:learningmanagement/screens/Student_screens/quiz/quiz_list_screen.dart';
+import 'package:learningmanagement/screens/Student_screens/documents/document_list_screen.dart';
 import 'package:learningmanagement/screens/Student_screens/forum_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
