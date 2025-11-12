@@ -5,45 +5,52 @@ import 'package:flutter/material.dart';
 class AuthState {
   final bool isLoading;
   final String? errorMessage;
+  final bool isAuthenticated;
 
-  const AuthState({this.isLoading = false, this.errorMessage});
+  const AuthState({
+    this.isLoading = false,
+    this.errorMessage,
+    this.isAuthenticated = false,
+  });
 
-  AuthState copyWith({bool? isLoading, String? errorMessage}) {
+  AuthState copyWith({
+    bool? isLoading,
+    String? errorMessage,
+    bool? isAuthenticated,
+  }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
+      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
     );
   }
 }
 
-// 2. "Bộ não" (Notifier)
 class AuthProvider extends Notifier<AuthState> {
-  // Hàm tạo state ban đầu
   @override
   AuthState build() {
-    return const AuthState();
+    // TODO: (Sau này) Kiểm tra "bộ nhớ" (secure storage)
+    // xem người dùng đã đăng nhập từ lần trước chưa
+    return const AuthState(isAuthenticated: false);
   }
 
-  // 3. Hàm Login (Trả về Future<bool>)
-  Future<bool> login(String email, String password) async {
+  Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
-
     await Future.delayed(const Duration(seconds: 2));
 
     if (email == "test@gmail.com") {
-      state = state.copyWith(isLoading: false);
-      return true;
+      // SỬA: Báo là đã ĐĂNG NHẬP THÀNH CÔNG
+      state = state.copyWith(isLoading: false, isAuthenticated: true);
     } else {
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Tài khoản hoặc mật khẩu không đúng',
+        isAuthenticated: false,
       );
-      return false;
     }
   }
 
-  // 4. Hàm Register (Trả về Future<bool>)
-  Future<bool> register(String email, String password) async {
+  Future<void> register(String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     await Future.delayed(const Duration(seconds: 2));
 
@@ -52,15 +59,19 @@ class AuthProvider extends Notifier<AuthState> {
         isLoading: false,
         errorMessage: 'Email đã được sử dụng',
       );
-      return false;
     } else {
       state = state.copyWith(isLoading: false);
-      return true;
     }
+  }
+
+  // 5. HÀM MỚI: ĐĂNG XUẤT
+  Future<void> logout() async {
+    state = state.copyWith(isLoading: true);
+    await Future.delayed(const Duration(seconds: 1));
+    state = state.copyWith(isLoading: false, isAuthenticated: false);
   }
 }
 
-// 5. Provider để sử dụng trong UI
 final authProvider = NotifierProvider<AuthProvider, AuthState>(() {
   return AuthProvider();
 });

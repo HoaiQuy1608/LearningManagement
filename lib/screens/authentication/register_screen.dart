@@ -27,15 +27,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    final success = await ref
+    await ref
         .read(authProvider.notifier)
         .register(
           _accountController.text.trim(),
           _passwordController.text.trim(),
         );
-    if (success && mounted) {
-      Navigator.pop(context);
-    }
   }
 
   @override

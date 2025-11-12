@@ -28,15 +28,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    final success = await ref
+    await ref
         .read(authProvider.notifier)
         .login(_accountController.text.trim(), _passwordController.text.trim());
-    if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    }
   }
 
   @override

@@ -3,20 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:learningmanagement/firebase_options.dart';
 import 'package:learningmanagement/screens/authentication/login_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:learningmanagement/providers/auth_provider.dart';
+import 'package:learningmanagement/screens/Student_screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(ProviderScope(child: MainApp()));
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAuthenticated = ref.watch(
+      authProvider.select((state) => state.isAuthenticated),
+    );
     return MaterialApp(
       title: 'Quản lý Học tập',
       debugShowCheckedModeBanner: false,
@@ -29,7 +32,7 @@ class MainApp extends StatelessWidget {
           floatingLabelBehavior: FloatingLabelBehavior.auto,
         ),
       ),
-      home: const LoginScreen(),
+      home: isAuthenticated ? const HomeScreen() : const LoginScreen(),
     );
   }
 }
