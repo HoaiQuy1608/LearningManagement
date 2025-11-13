@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'upload_document_screen.dart';
-import '/../providers/document_provider.dart';
+import 'package:learningmanagement/providers/document_provider.dart';
 
 class DocumentListScreen extends ConsumerWidget {
   const DocumentListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isLoading = ref.watch(documentProvider).isLoading;
-    final documents = ref.watch(documentProvider).documents;
+    final docState = ref.watch(documentProvider);
+    final documents = docState.documents;
     return Stack(
       children: [
         ListView.builder(
@@ -52,22 +51,7 @@ class DocumentListScreen extends ConsumerWidget {
             );
           },
         ),
-        Positioned(
-          bottom: 16.0,
-          right: 16.0,
-          child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const UploadDocumentScreen(),
-                ),
-              );
-            },
-            child: const Icon(Icons.upload_file),
-          ),
-        ),
-        if (isLoading)
+        if (docState.isLoading)
           Container(
             color: Colors.black.withAlpha(77),
             child: const Center(child: CircularProgressIndicator()),

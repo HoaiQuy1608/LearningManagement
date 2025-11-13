@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/forum_provider.dart';
-import 'create_post_screen.dart';
 
 class ForumScreen extends ConsumerWidget {
   const ForumScreen({super.key});
@@ -17,7 +16,6 @@ class ForumScreen extends ConsumerWidget {
           itemCount: posts.length,
           itemBuilder: (context, index) {
             final post = posts[index];
-
             return Card(
               margin: const EdgeInsets.symmetric(
                 horizontal: 16.0,
@@ -38,7 +36,6 @@ class ForumScreen extends ConsumerWidget {
                 subtitle: Text(
                   'Tác giả: ${post.author} | ${post.replyCount} trả lời | ${post.likeCount} thích',
                 ),
-
                 trailing: const Icon(Icons.arrow_forward_ios, size: 14.0),
                 onTap: () {
                   print('TODO: Mở chi tiết bài đăng ${post.title}');
@@ -46,21 +43,6 @@ class ForumScreen extends ConsumerWidget {
               ),
             );
           },
-        ),
-        Positioned(
-          bottom: 16.0,
-          right: 16.0,
-          child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreatePostScreen(),
-                ),
-              );
-            },
-            child: const Icon(Icons.edit),
-          ),
         ),
         if (forumState.isLoading)
           Container(

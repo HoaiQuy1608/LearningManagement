@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/quiz_provider.dart';
-import 'create_quiz_screen.dart';
 
 class QuizListScreen extends ConsumerWidget {
   const QuizListScreen({super.key});
@@ -17,7 +16,6 @@ class QuizListScreen extends ConsumerWidget {
           itemCount: quizzes.length,
           itemBuilder: (context, index) {
             final quiz = quizzes[index];
-
             return Card(
               margin: const EdgeInsets.symmetric(
                 horizontal: 16.0,
@@ -43,7 +41,7 @@ class QuizListScreen extends ConsumerWidget {
                         SizedBox(width: 4.0),
                         Text('${quiz.questionCount} câu'),
                         SizedBox(width: 16.0),
-                        const Icon(
+                        Icon(
                           Icons.timer_outlined,
                           size: 16,
                           color: Colors.grey,
@@ -61,21 +59,6 @@ class QuizListScreen extends ConsumerWidget {
               ),
             );
           },
-        ),
-        Positioned(
-          bottom: 16.0,
-          right: 16.0,
-          child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreateQuizScreen(),
-                ),
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
         ),
         if (quizState.isLoading)
           Container(

@@ -5,7 +5,7 @@ import 'package:learningmanagement/screens/Student_screens/scheduler/scheduler_s
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
 import 'package:learningmanagement/screens/Student_screens/quiz/quiz_list_screen.dart';
 import 'package:learningmanagement/screens/Student_screens/documents/document_list_screen.dart';
-import 'package:learningmanagement/screens/Student_screens/Forum/forum_screen.dart';
+import 'package:learningmanagement/screens/Student_screens/forum/forum_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -20,9 +20,32 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedIndex = ref.watch(homeProvider);
+    final homeState = ref.watch(homeProvider);
+    final notifier = ref.read(homeProvider.notifier);
+
     return Scaffold(
-      body: IndexedStack(index: selectedIndex, children: _widgetOptions),
+      appBar: AppBar(
+        title: Text(homeState.appBarTitle),
+        actions: [
+          if (homeState.selectedIndex == 1)
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                // TODO: Implement search
+              },
+            ),
+          if (homeState.actionIcon != null)
+            IconButton(
+              icon: Icon(homeState.actionIcon),
+              onPressed: () => notifier.onActionTapped(context),
+              tooltip: _getActionTooltip(homeState.selectedIndex),
+            ),
+        ],
+      ),
+      body: IndexedStack(
+        index: homeState.selectedIndex,
+        children: _widgetOptions,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -37,13 +60,28 @@ class HomeScreen extends ConsumerWidget {
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Diễn đàn'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Hồ sơ'),
         ],
-        currentIndex: selectedIndex,
+        currentIndex: homeState.selectedIndex,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
-        onTap: (index) => ref.read(homeProvider.notifier).onTabChange(index),
+        onTap: (index) => notifier.onItemTapped(index),
       ),
     );
+  }
+
+  String _getActionTooltip(int index) {
+    switch (index) {
+      case 0:
+        return 'Thêm sự kiện';
+      case 1:
+        return 'Tải tài liệu lên';
+      case 2:
+        return 'Tạo quiz mới';
+      case 3:
+        return 'Viết bài mới';
+      default:
+        return '';
+    }
   }
 }
