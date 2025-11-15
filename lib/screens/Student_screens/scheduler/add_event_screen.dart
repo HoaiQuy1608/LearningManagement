@@ -6,7 +6,7 @@ class AddEventScreen extends ConsumerStatefulWidget {
   const AddEventScreen({super.key});
 
   @override
-  _AddEventScreenState createState() => _AddEventScreenState();
+  ConsumerState<AddEventScreen> createState() => _AddEventScreenState();
 }
 
 class _AddEventScreenState extends ConsumerState<AddEventScreen> {

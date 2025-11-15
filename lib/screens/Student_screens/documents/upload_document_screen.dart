@@ -6,7 +6,8 @@ class UploadDocumentScreen extends ConsumerStatefulWidget {
   const UploadDocumentScreen({super.key});
 
   @override
-  _UploadDocumentScreenState createState() => _UploadDocumentScreenState();
+  ConsumerState<UploadDocumentScreen> createState() =>
+      _UploadDocumentScreenState();
 }
 
 class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {

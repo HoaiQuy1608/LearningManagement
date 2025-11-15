@@ -6,7 +6,7 @@ import 'package:learningmanagement/providers/scheduler_provider.dart';
 class SchedulerScreen extends ConsumerStatefulWidget {
   const SchedulerScreen({super.key});
   @override
-  _SchedulerScreenState createState() => _SchedulerScreenState();
+  ConsumerState<SchedulerScreen> createState() => _SchedulerScreenState();
 }
 
 class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {

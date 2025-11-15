@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class AdminHome extends StatelessWidget {
-  const AdminHome({super.key});
+class MyClassesScreen extends StatelessWidget {
+  const MyClassesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Center(
       child: Text(
-        'Trang chủ Quản trị viên',
+        'Lớp học của giáo viên',
         textAlign: TextAlign.center,
         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
       ),

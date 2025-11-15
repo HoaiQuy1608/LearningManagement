@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart'; // 1. Import để dùng "lọc số"
-
-// 2. Import "Bộ não"
+import 'package:flutter/services.dart';
 import 'package:learningmanagement/providers/quiz_provider.dart';
 
 class CreateQuizScreen extends ConsumerStatefulWidget {
   const CreateQuizScreen({super.key});
 
   @override
-  _CreateQuizScreenState createState() => _CreateQuizScreenState();
+  ConsumerState<CreateQuizScreen> createState() => _CreateQuizScreenState();
 }
 
 class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
