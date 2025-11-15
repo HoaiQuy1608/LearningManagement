@@ -6,7 +6,7 @@ import 'package:learningmanagement/screens/Student_screens/scheduler/scheduler_s
 import 'package:learningmanagement/screens/Student_screens/documents/document_list_screen.dart';
 import 'package:learningmanagement/screens/Student_screens/quiz/quiz_list_screen.dart';
 import 'package:learningmanagement/screens/common/forum/forum_screen.dart';
-import 'package:learningmanagement/screens/common/authentication/profile_screen.dart';
+import 'package:learningmanagement/screens/authentication/profile_screen.dart';
 import 'package:learningmanagement/screens/Teacher_screens/my_classes_screen.dart';
 import 'package:learningmanagement/screens/Moderator_screens/moderator_home.dart';
 import 'package:learningmanagement/screens/Admin_screens/admin_home.dart';

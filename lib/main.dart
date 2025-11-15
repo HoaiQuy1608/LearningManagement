@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:learningmanagement/firebase_options.dart';
-import 'package:learningmanagement/screens/common/authentication/login_screen.dart';
+import 'package:learningmanagement/screens/authentication/login_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
 import 'package:learningmanagement/screens/common/home_screen.dart';
