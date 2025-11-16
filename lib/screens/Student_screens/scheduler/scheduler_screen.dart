@@ -45,7 +45,7 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
-              ref.read(schedulerProvider.notifier).removeEvent(eventId);
+              ref.read(schedulerProvider.notifier).removeEvent(eventId, ctx);
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

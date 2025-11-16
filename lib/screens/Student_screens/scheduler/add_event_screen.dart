@@ -26,6 +26,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   final _types = ['Buổi học', 'Bài kiểm tra', 'Bài tập', 'Deadline'];
   final _reminders = [
     'Không nhắc',
+    'Trước 1 phút',
     'Trước 5 phút',
     'Trước 1 giờ',
     'Trước 1 ngày',

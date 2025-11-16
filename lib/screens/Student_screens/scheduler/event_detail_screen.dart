@@ -66,7 +66,9 @@ class EventDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 onPressed: () {
-                  ref.read(schedulerProvider.notifier).removeEvent(event.id);
+                  ref
+                      .read(schedulerProvider.notifier)
+                      .removeEvent(event.id, context);
                   Navigator.pop(context);
                 },
               ),

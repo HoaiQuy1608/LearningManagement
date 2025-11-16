@@ -1,14 +1,18 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:learningmanagement/models/schedule_model.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
 import 'dart:collection';
+import 'package:learningmanagement/main.dart';
+import 'package:learningmanagement/service/notifications_service.dart';
 
 class SchedulerProvider
     extends Notifier<LinkedHashMap<DateTime, List<ScheduleModel>>> {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
   late final String _userId;
+  ScheduleModel? _lastDeleted;
 
   @override
   LinkedHashMap<DateTime, List<ScheduleModel>> build() {
@@ -71,12 +75,15 @@ class SchedulerProvider
         .child(_userId)
         .child(event.id)
         .set(event.toMap());
+    await NotificationsService.schedule(event);
   }
 
-  Future<void> removeEvent(String eventId) async {
+  Future<void> removeEvent(String eventId, BuildContext context) async {
     final day = state.entries
         .firstWhere((e) => e.value.any((ev) => ev.id == eventId))
         .key;
+    final event = state[day]!.firstWhere((ev) => ev.id == eventId);
+    _lastDeleted = event;
     final newState = LinkedHashMap<DateTime, List<ScheduleModel>>(
       equals: isSameDay,
       hashCode: (key) => key.day * 1000000 + key.month * 10000 + key.year,
@@ -84,6 +91,23 @@ class SchedulerProvider
     newState[day] = newState[day]!.where((ev) => ev.id != eventId).toList();
     state = newState;
     await _db.child('schedules').child(_userId).child(eventId).remove();
+    await NotificationsService.cancel(eventId);
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Đã xóa sự kiện'),
+        action: SnackBarAction(
+          label: 'Hoàn tác',
+          onPressed: () {
+            if (_lastDeleted != null) {
+              addEvent(_lastDeleted!);
+              _lastDeleted = null;
+            }
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> editEvent(ScheduleModel updateEvent) async {
