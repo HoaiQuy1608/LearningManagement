@@ -2,27 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/scheduler_provider.dart';
 import 'package:learningmanagement/models/schedule_model.dart';
-import 'package:uuid/uuid.dart';
 import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
 
-class AddEventScreen extends ConsumerStatefulWidget {
-  const AddEventScreen({super.key});
+class EditEventScreen extends ConsumerStatefulWidget {
+  final ScheduleModel event;
+  const EditEventScreen({super.key, required this.event});
 
   @override
-  ConsumerState<AddEventScreen> createState() => _AddEventScreenState();
+  ConsumerState<EditEventScreen> createState() => _EditEventScreenState();
 }
 
-class _AddEventScreenState extends ConsumerState<AddEventScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _notesController = TextEditingController();
+class _EditEventScreenState extends ConsumerState<EditEventScreen> {
+  late final _formKey = GlobalKey<FormState>();
+  late final _titleController = TextEditingController(text: widget.event.title);
+  late final _notesController = TextEditingController(
+    text: widget.event.description ?? '',
+  );
 
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _startTime = TimeOfDay.now();
-  TimeOfDay? _endTime;
-  String _selectedType = 'Buổi học';
-  String? _selectedReminder;
-  String _selectedColor = '#FF6B6B';
+  late DateTime _selectedDate;
+  late TimeOfDay _startTime;
+  late TimeOfDay? _endTime;
+  late String _selectedType;
+  late String? _selectedReminder;
+  late String _selectedColor;
   DateTime? _deadline;
 
   final _types = ['Buổi học', 'Bài kiểm tra', 'Bài tập', 'Deadline'];
@@ -42,10 +44,44 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
     'Deadline': ScheduleType.deadline,
   };
 
+  final Map<ScheduleType, String> _reverseTypeMap = {
+    ScheduleType.lesson: 'Buổi học',
+    ScheduleType.exam: 'Bài kiểm tra',
+    ScheduleType.assignment: 'Bài tập',
+    ScheduleType.deadline: 'Deadline',
+  };
+
+  bool _didFetchDeadline = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.event.startTime;
+    _startTime = TimeOfDay.fromDateTime(widget.event.startTime);
+    _endTime = widget.event.endTime != null
+        ? TimeOfDay.fromDateTime(widget.event.endTime!)
+        : null;
+    _selectedType = _reverseTypeMap[widget.event.type] ?? 'Buổi học';
+    _selectedReminder = widget.event.reminder;
+    _selectedColor = widget.event.color;
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_didFetchDeadline) {
+      final countdown = ref.read(deadlineCountdownProvider)[widget.event.id];
+      _deadline = countdown?.deadline;
+      _didFetchDeadline = true;
+    }
     return Scaffold(
-      appBar: AppBar(title: const Text('Thêm sự kiện'), centerTitle: true),
+      appBar: AppBar(title: const Text('Cập nhật sự kiện'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -62,7 +98,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                validator: (v) => v!.isEmpty ? 'Nhập tiêu đề' : null,
+                validator: (v) => v!.isEmpty ? 'Vui lòng nhập tiêu đề' : null,
               ),
               const SizedBox(height: 16),
 
@@ -94,7 +130,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                   final date = await showDatePicker(
                     context: context,
                     initialDate: _selectedDate,
-                    firstDate: DateTime.now(),
+                    firstDate: DateTime.now().subtract(
+                      const Duration(days: 365),
+                    ),
                     lastDate: DateTime(2030),
                   );
                   if (date != null) setState(() => _selectedDate = date);
@@ -102,7 +140,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               ),
               const SizedBox(height: 8),
 
-              // === GIỜ BẮT ĐẦU / KẾT THÚC ===
+              // === GIỜ ===
               Row(
                 children: [
                   Expanded(
@@ -139,7 +177,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               ),
               const SizedBox(height: 16),
 
-              // === DEADLINE (chỉ hiện khi không phải Buổi học) ===
+              // === DEADLINE ===
               if (_selectedType != 'Buổi học')
                 Column(
                   children: [
@@ -180,7 +218,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     ),
                   ],
                 ),
+
               const SizedBox(height: 16),
+
               // === NHẮC NHỞ ===
               DropdownButtonFormField<String>(
                 initialValue: _selectedReminder,
@@ -212,7 +252,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               ),
               const SizedBox(height: 16),
 
-              // === CHỌN MÀU ===
+              // === MÀU ===
               const Text(
                 'Chọn màu:',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -242,7 +282,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               ),
               const SizedBox(height: 24),
 
-              // === NÚT LƯU ===
+              // === NÚT CẬP NHẬT ===
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -268,8 +308,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                       final eventType =
                           _typeMap[_selectedType] ?? ScheduleType.lesson;
 
-                      final event = ScheduleModel(
-                        id: const Uuid().v4(),
+                      final updatedEvent = widget.event.copyWith(
                         title: _titleController.text,
                         description: _notesController.text.isEmpty
                             ? null
@@ -282,19 +321,32 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                         deadline: _deadline,
                       );
 
-                      // 1. LƯU SỰ KIỆN
+                      // 1. CẬP NHẬT SỰ KIỆN
                       await ref
                           .read(schedulerProvider.notifier)
-                          .addEvent(event);
+                          .editEvent(updatedEvent);
 
-                      // 2. TẠO DEADLINE COUNTDOWN (nếu có)
-                      if (_deadline != null && _selectedType != 'Buổi học') {
-                        await ref
-                            .read(deadlineCountdownProvider.notifier)
-                            .createOrUpdate(event.id, _deadline!);
+                      // 2. CẬP NHẬT DEADLINE COUNTDOWN
+                      if (_selectedType != 'Buổi học') {
+                        if (_deadline != null) {
+                          final existing = ref.read(
+                            deadlineCountdownProvider,
+                          )[widget.event.id];
+                          if (existing != null) {
+                            // Cập nhật deadline
+                            await ref
+                                .read(deadlineCountdownProvider.notifier)
+                                .createOrUpdate(widget.event.id, _deadline!);
+                          } else {
+                            // Tạo mới
+                            await ref
+                                .read(deadlineCountdownProvider.notifier)
+                                .createOrUpdate(widget.event.id, _deadline!);
+                          }
+                        }
                       }
                       if (!context.mounted) return;
-                      if (mounted) Navigator.pop(context);
+                      Navigator.pop(context);
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -304,7 +356,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                     ),
                   ),
                   child: const Text(
-                    'Lưu sự kiện',
+                    'Cập nhật',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
