@@ -6,6 +6,7 @@ import 'package:learningmanagement/screens/Student_screens/scheduler/event_detai
 import 'package:learningmanagement/models/schedule_model.dart';
 import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
 import 'package:learningmanagement/widgets/countdown_timer.dart';
+import 'package:learningmanagement/screens/Student_screens/scheduler/student_stats_screen.dart';
 
 class SchedulerScreen extends ConsumerStatefulWidget {
   const SchedulerScreen({super.key});
@@ -90,14 +91,28 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
         // === TIÊU ĐỀ NGÀY ===
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Sự kiện ngày ${_selectedDay.day}/${_selectedDay.month}',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Sự kiện ngày ${_selectedDay.day}/${_selectedDay.month}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
+              IconButton(
+                icon: const Icon(Icons.bar_chart, color: Colors.blue),
+                tooltip: 'Xem Thống kê',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const StudentStatsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
