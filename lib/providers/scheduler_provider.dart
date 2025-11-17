@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:learningmanagement/models/schedule_model.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
 import 'dart:collection';
-import 'package:learningmanagement/main.dart';
 import 'package:learningmanagement/service/notifications_service.dart';
 
 class SchedulerProvider
@@ -16,7 +14,14 @@ class SchedulerProvider
 
   @override
   LinkedHashMap<DateTime, List<ScheduleModel>> build() {
-    _userId = ref.read(authProvider).userId!;
+    final userId = ref.watch(authProvider).userId;
+    if (userId == null) {
+      return LinkedHashMap<DateTime, List<ScheduleModel>>(
+        equals: isSameDay,
+        hashCode: (key) => key.day * 1000000 + key.month * 10000 + key.year,
+      );
+    }
+    _userId = userId;
     _listenToEvents();
     return LinkedHashMap<DateTime, List<ScheduleModel>>(
       equals: isSameDay,
@@ -36,7 +41,8 @@ class SchedulerProvider
       }
       final Map<DateTime, List<ScheduleModel>> eventsMap = {};
       data.forEach((key, value) {
-        final eventMap = value as Map<Object?, Object?>;
+        if (value is! Map<Object?, Object?>) return;
+        final eventMap = value;
         final event = ScheduleModel.fromMap(
           Map<String, dynamic>.from(eventMap),
         );
@@ -47,7 +53,6 @@ class SchedulerProvider
         );
         eventsMap.putIfAbsent(eventDate, () => []).add(event);
       });
-
       final newState = LinkedHashMap<DateTime, List<ScheduleModel>>(
         equals: isSameDay,
         hashCode: (key) => key.day * 1000000 + key.month * 10000 + key.year,
@@ -68,7 +73,7 @@ class SchedulerProvider
       equals: isSameDay,
       hashCode: (key) => key.day * 1000000 + key.month * 10000 + key.year,
     )..addAll(state);
-    newState[day] = [...?newState[day], event];
+    newState[day] = [...newState[day] ?? [], event];
     state = newState;
     await _db
         .child('schedules')
@@ -76,9 +81,31 @@ class SchedulerProvider
         .child(event.id)
         .set(event.toMap());
     await NotificationsService.schedule(event);
+
+    if (event.endTime != null) {
+      final endReminderTime = event.endTime!.subtract(
+        const Duration(minutes: 0),
+      );
+      await NotificationsService.schedule(
+        event,
+        specificTime: endReminderTime,
+        idSuffix: '_end',
+      );
+    }
   }
 
-  Future<void> removeEvent(String eventId, BuildContext context) async {
+  Duration _parseDuration(String reminder) {
+    if (reminder.contains('1 phút')) return const Duration(minutes: 1);
+    if (reminder.contains('5 phút')) return const Duration(minutes: 5);
+    if (reminder.contains('1 giờ')) return const Duration(hours: 1);
+    if (reminder.contains('1 ngày')) return const Duration(days: 1);
+    return Duration.zero;
+  }
+
+  Future<void> removeEvent(String eventId) async {
+    if (!state.values.any((list) => list.any((ev) => ev.id == eventId))) {
+      return;
+    }
     final day = state.entries
         .firstWhere((e) => e.value.any((ev) => ev.id == eventId))
         .key;
@@ -89,28 +116,28 @@ class SchedulerProvider
       hashCode: (key) => key.day * 1000000 + key.month * 10000 + key.year,
     )..addAll(state);
     newState[day] = newState[day]!.where((ev) => ev.id != eventId).toList();
+    if (newState[day]!.isEmpty) {
+      newState.remove(day);
+    }
     state = newState;
     await _db.child('schedules').child(_userId).child(eventId).remove();
     await NotificationsService.cancel(eventId);
+  }
 
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Đã xóa sự kiện'),
-        action: SnackBarAction(
-          label: 'Hoàn tác',
-          onPressed: () {
-            if (_lastDeleted != null) {
-              addEvent(_lastDeleted!);
-              _lastDeleted = null;
-            }
-          },
-        ),
-      ),
-    );
+  Future<void> undoRemove() async {
+    if (_lastDeleted != null) {
+      await addEvent(_lastDeleted!);
+      _lastDeleted = null;
+    }
   }
 
   Future<void> editEvent(ScheduleModel updateEvent) async {
+    if (!state.values.any(
+      (list) => list.any((ev) => ev.id == updateEvent.id),
+    )) {
+      await addEvent(updateEvent);
+      return;
+    }
     final oldDay = state.entries
         .firstWhere((e) => e.value.any((ev) => ev.id == updateEvent.id))
         .key;
@@ -131,13 +158,34 @@ class SchedulerProvider
       newState.remove(oldDay);
     }
 
-    newState[newDay] = [...?newState[newDay], updateEvent];
+    newState[newDay] = [...newState[newDay] ?? [], updateEvent];
     state = newState;
     await _db
         .child('schedules')
         .child(_userId)
         .child(updateEvent.id)
         .set(updateEvent.toMap());
+
+    await NotificationsService.cancel(updateEvent.id);
+    if (updateEvent.reminder != null && updateEvent.reminder != 'Không nhắc') {
+      Duration duration = _parseDuration(updateEvent.reminder!);
+      DateTime notificationTime = updateEvent.startTime.subtract(duration);
+      if (notificationTime.isAfter(DateTime.now())) {
+        await NotificationsService.schedule(updateEvent);
+      }
+    }
+    if (updateEvent.endTime != null) {
+      final endReminderTime = updateEvent.endTime!.subtract(
+        const Duration(minutes: 0),
+      );
+      if (endReminderTime.isAfter(DateTime.now())) {
+        await NotificationsService.schedule(
+          updateEvent,
+          specificTime: endReminderTime,
+          idSuffix: '_end',
+        );
+      }
+    }
   }
 }
 

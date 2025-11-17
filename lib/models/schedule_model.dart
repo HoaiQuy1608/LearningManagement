@@ -1,14 +1,17 @@
+enum ScheduleType { lesson, exam, assignment, deadline }
+
 class ScheduleModel {
   final String id;
   final String title;
   final String? description;
   final DateTime startTime;
   final DateTime? endTime;
-  final String? location;
   // mau hien thi tren lich
   final String color;
-  final String type;
+  final ScheduleType type;
   final String? reminder;
+  final DateTime? deadline;
+  final bool isCompleted;
 
   ScheduleModel({
     required this.id,
@@ -16,10 +19,11 @@ class ScheduleModel {
     this.description,
     required this.startTime,
     this.endTime,
-    this.location,
     required this.color,
     required this.type,
     this.reminder,
+    this.deadline,
+    this.isCompleted = false,
   });
 
   ScheduleModel copyWith({
@@ -28,10 +32,11 @@ class ScheduleModel {
     String? description,
     DateTime? startTime,
     DateTime? endTime,
-    String? location,
     String? color,
-    String? type,
+    ScheduleType? type,
     String? reminder,
+    DateTime? deadline,
+    bool? isCompleted,
   }) {
     return ScheduleModel(
       id: id ?? this.id,
@@ -39,10 +44,11 @@ class ScheduleModel {
       description: description ?? this.description,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
-      location: location ?? this.location,
       color: color ?? this.color,
       type: type ?? this.type,
       reminder: reminder ?? this.reminder,
+      deadline: deadline ?? this.deadline,
+      isCompleted: isCompleted ?? this.isCompleted,
     );
   }
 
@@ -53,10 +59,11 @@ class ScheduleModel {
       'description': description,
       'startTime': startTime.toIso8601String(),
       'endTime': endTime?.toIso8601String(),
-      'location': location,
       'color': color,
-      'type': type,
+      'type': type.name,
       'reminder': reminder,
+      'deadline': deadline?.toIso8601String(),
+      'isCompleted': isCompleted,
     };
   }
 
@@ -68,10 +75,16 @@ class ScheduleModel {
       description: map['description'] as String?,
       startTime: DateTime.parse(map['startTime'] as String),
       endTime: endTimeStr != null ? DateTime.parse(endTimeStr) : null,
-      location: map['location'] as String?,
       color: map['color'] as String,
-      type: map['type'] as String,
+      type: ScheduleType.values.firstWhere(
+        (e) => e.name == map['type'],
+        orElse: () => ScheduleType.lesson,
+      ),
       reminder: map['reminder'] as String?,
+      deadline: map['deadline'] != null
+          ? DateTime.parse(map['deadline'] as String)
+          : null,
+      isCompleted: map['isCompleted'] as bool? ?? false,
     );
   }
 }

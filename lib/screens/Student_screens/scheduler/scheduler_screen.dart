@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:learningmanagement/providers/scheduler_provider.dart';
 import 'package:learningmanagement/screens/Student_screens/scheduler/event_detail_screen.dart';
-import 'package:learningmanagement/screens/Student_screens/scheduler/add_event_screen.dart';
-import 'package:learningmanagement/screens/Student_screens/scheduler/edit_event_screen.dart';
+import 'package:learningmanagement/models/schedule_model.dart';
+import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
+import 'package:learningmanagement/widgets/countdown_timer.dart';
 
 class SchedulerScreen extends ConsumerStatefulWidget {
   const SchedulerScreen({super.key});
@@ -16,54 +17,21 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
 
+  static const Map<ScheduleType, String> _typeName = {
+    ScheduleType.lesson: 'Buổi học',
+    ScheduleType.exam: 'Bài kiểm tra',
+    ScheduleType.assignment: 'Bài tập',
+    ScheduleType.deadline: 'Deadline',
+  };
+
   Color _getColor(String hex) {
     return Color(int.parse(hex.replaceFirst('#', '0xff')));
-  }
-
-  void _showRemoveConfirmDialog(
-    BuildContext context,
-    WidgetRef ref,
-    String eventId,
-  ) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.warning, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('Xác nhận xóa'),
-          ],
-        ),
-        content: const Text('Bạn có chắc muốn xóa sự kiện này?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              ref.read(schedulerProvider.notifier).removeEvent(eventId, ctx);
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Đã xóa sự kiện'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            },
-            child: const Text('Xóa', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final eventsMap = ref.watch(schedulerProvider);
+    final countdownMap = ref.watch(deadlineCountdownProvider);
     final selectedEvents = ref
         .read(schedulerProvider.notifier)
         .getEventsForDay(_selectedDay);
@@ -79,7 +47,7 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withAlpha(26),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -103,7 +71,7 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
             ),
             calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
-                color: theme.primaryColor.withOpacity(0.3),
+                color: theme.primaryColor.withAlpha(77),
                 shape: BoxShape.circle,
               ),
               selectedDecoration: BoxDecoration(
@@ -119,28 +87,20 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
           ),
         ),
 
-        // === TIÊU ĐỀ + NÚT THÊM ===
+        // === TIÊU ĐỀ NGÀY ===
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Text(
-                'Sự kiện ngày ${_selectedDay.day}/${_selectedDay.month}',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Sự kiện ngày ${_selectedDay.day}/${_selectedDay.month}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.add_circle, color: Colors.green),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddEventScreen()),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
+        const SizedBox(height: 8),
         const Divider(height: 1),
 
         // === DANH SÁCH SỰ KIỆN ===
@@ -164,6 +124,7 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
                   itemCount: selectedEvents.length,
                   itemBuilder: (context, index) {
                     final event = selectedEvents[index];
+                    final countdown = countdownMap[event.id];
                     return Card(
                       margin: const EdgeInsets.symmetric(
                         vertical: 6,
@@ -196,41 +157,35 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             Text(
-                              '${event.startTime.hour}:${event.startTime.minute.toString().padLeft(2, '0')} • ${event.type}',
+                              '${event.startTime.hour}:${event.startTime.minute.toString().padLeft(2, '0')} • ${_typeName[event.type] ?? event.type.name}',
                               style: TextStyle(
                                 color: theme.primaryColor,
                                 fontSize: 12,
                               ),
                             ),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // NÚT SỬA
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        EditEventScreen(event: event),
-                                  ),
-                                );
-                              },
-                            ),
-                            // NÚT XÓA
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _showRemoveConfirmDialog(
-                                context,
-                                ref,
-                                event.id,
+                            // Hiển thị đồng hồ đếm ngược
+                            if (event.type != ScheduleType.lesson &&
+                                countdown != null &&
+                                !countdown.isCompleted)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.timer,
+                                      size: 12,
+                                      color: Colors.red,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    CountdownTimer(
+                                      deadline: countdown.deadline,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
                           ],
                         ),
+                        // Kết nối đến chi tiết sự kiện
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(

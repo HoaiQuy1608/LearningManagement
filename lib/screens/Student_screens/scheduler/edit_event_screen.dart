@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/scheduler_provider.dart';
 import 'package:learningmanagement/models/schedule_model.dart';
+import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
 
 class EditEventScreen extends ConsumerStatefulWidget {
   final ScheduleModel event;
@@ -24,6 +25,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
   late String _selectedType;
   late String? _selectedReminder;
   late String _selectedColor;
+  DateTime? _deadline;
 
   final _types = ['Buổi học', 'Bài kiểm tra', 'Bài tập', 'Deadline'];
   final _reminders = [
@@ -35,6 +37,22 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
   ];
   final _colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57'];
 
+  final Map<String, ScheduleType> _typeMap = {
+    'Buổi học': ScheduleType.lesson,
+    'Bài kiểm tra': ScheduleType.exam,
+    'Bài tập': ScheduleType.assignment,
+    'Deadline': ScheduleType.deadline,
+  };
+
+  final Map<ScheduleType, String> _reverseTypeMap = {
+    ScheduleType.lesson: 'Buổi học',
+    ScheduleType.exam: 'Bài kiểm tra',
+    ScheduleType.assignment: 'Bài tập',
+    ScheduleType.deadline: 'Deadline',
+  };
+
+  bool _didFetchDeadline = false;
+
   @override
   void initState() {
     super.initState();
@@ -43,7 +61,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
     _endTime = widget.event.endTime != null
         ? TimeOfDay.fromDateTime(widget.event.endTime!)
         : null;
-    _selectedType = widget.event.type;
+    _selectedType = _reverseTypeMap[widget.event.type] ?? 'Buổi học';
     _selectedReminder = widget.event.reminder;
     _selectedColor = widget.event.color;
   }
@@ -57,6 +75,11 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_didFetchDeadline) {
+      final countdown = ref.read(deadlineCountdownProvider)[widget.event.id];
+      _deadline = countdown?.deadline;
+      _didFetchDeadline = true;
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Cập nhật sự kiện'), centerTitle: true),
       body: SingleChildScrollView(
@@ -81,8 +104,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
 
               // === LOẠI SỰ KIỆN ===
               DropdownButtonFormField<String>(
-                initialValue:
-                    _selectedType, // ← DÙNG value, KHÔNG DÙNG initialValue
+                initialValue: _selectedType,
                 decoration: InputDecoration(
                   labelText: 'Loại sự kiện',
                   prefixIcon: const Icon(Icons.category),
@@ -118,7 +140,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
               ),
               const SizedBox(height: 8),
 
-              // === GIỜ BẮT ĐẦU / KẾT THÚC ===
+              // === GIỜ ===
               Row(
                 children: [
                   Expanded(
@@ -155,9 +177,53 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
               ),
               const SizedBox(height: 16),
 
+              // === DEADLINE ===
+              if (_selectedType != 'Buổi học')
+                Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    ListTile(
+                      leading: const Icon(Icons.flag, color: Colors.red),
+                      title: Text(
+                        _deadline == null
+                            ? 'Chọn deadline'
+                            : 'Deadline: ${_deadline!.day}/${_deadline!.month} ${_deadline!.hour}:${_deadline!.minute.toString().padLeft(2, '0')}',
+                      ),
+                      trailing: const Icon(Icons.edit),
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(2030),
+                        );
+                        if (date == null) return;
+                        if (!context.mounted) return;
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.now(),
+                        );
+                        if (time != null) {
+                          setState(() {
+                            _deadline = DateTime(
+                              date.year,
+                              date.month,
+                              date.day,
+                              time.hour,
+                              time.minute,
+                            );
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+
+              const SizedBox(height: 16),
+
               // === NHẮC NHỞ ===
               DropdownButtonFormField<String>(
-                initialValue: _selectedReminder, // ← DÙNG value
+                initialValue: _selectedReminder,
                 decoration: InputDecoration(
                   labelText: 'Nhắc nhở',
                   prefixIcon: const Icon(Icons.notifications),
@@ -186,7 +252,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
               ),
               const SizedBox(height: 16),
 
-              // === CHỌN MÀU ===
+              // === MÀU ===
               const Text(
                 'Chọn màu:',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -220,7 +286,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       final start = DateTime(
                         _selectedDate.year,
@@ -239,6 +305,9 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                             )
                           : null;
 
+                      final eventType =
+                          _typeMap[_selectedType] ?? ScheduleType.lesson;
+
                       final updatedEvent = widget.event.copyWith(
                         title: _titleController.text,
                         description: _notesController.text.isEmpty
@@ -247,14 +316,36 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                         startTime: start,
                         endTime: end,
                         color: _selectedColor,
-                        type: _selectedType,
+                        type: eventType,
                         reminder: _selectedReminder,
+                        deadline: _deadline,
                       );
 
-                      // GỌI editEvent → UI + DB cập nhật ngay
-                      ref
+                      // 1. CẬP NHẬT SỰ KIỆN
+                      await ref
                           .read(schedulerProvider.notifier)
                           .editEvent(updatedEvent);
+
+                      // 2. CẬP NHẬT DEADLINE COUNTDOWN
+                      if (_selectedType != 'Buổi học') {
+                        if (_deadline != null) {
+                          final existing = ref.read(
+                            deadlineCountdownProvider,
+                          )[widget.event.id];
+                          if (existing != null) {
+                            // Cập nhật deadline
+                            await ref
+                                .read(deadlineCountdownProvider.notifier)
+                                .createOrUpdate(widget.event.id, _deadline!);
+                          } else {
+                            // Tạo mới
+                            await ref
+                                .read(deadlineCountdownProvider.notifier)
+                                .createOrUpdate(widget.event.id, _deadline!);
+                          }
+                        }
+                      }
+                      if (!context.mounted) return;
                       Navigator.pop(context);
                     }
                   },
