@@ -12,6 +12,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _studentIdController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -24,6 +25,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _studentIdController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -33,27 +35,68 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
     final success = await ref
         .read(authProvider.notifier)
-        .register(_emailController.text.trim(), _passwordController.text);
+        .register(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          name: _nameController.text.trim(),
+          studentId: _studentIdController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+        );
     setState(() => _isLoading = false);
-
     if (!success) return;
-
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đăng ký thành công! Vui lòng đăng nhập')),
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.mark_email_read, color: Colors.green),
+              SizedBox(width: 8),
+              Text('Đăng ký thành công'),
+            ],
+          ),
+          content: const Text(
+            'Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.',
+            style: TextStyle(fontSize: 15),
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context);
+              },
+              child: const Text('Đóng'),
+            ),
+          ],
+        ),
       );
-      Navigator.pop(context);
     }
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      filled: true,
+      fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Đăng ký')),
@@ -64,23 +107,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             key: _formKey,
             child: Column(
               children: [
-                Hero(
-                  tag: 'logo',
-                  child: Icon(
-                    Icons.school_rounded,
-                    size: 80,
-                    color: theme.primaryColor,
-                  ),
-                ),
+                const Icon(Icons.person_add, size: 100, color: Colors.blue),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'Tạo tài khoản mới',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
                 ),
                 const SizedBox(height: 32),
-
                 // Họ tên
                 TextFormField(
                   controller: _nameController,
@@ -90,7 +123,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       v?.trim().isEmpty ?? true ? 'Vui lòng nhập họ tên' : null,
                 ),
                 const SizedBox(height: 16),
-
+                // Mã sinh viên
+                TextFormField(
+                  controller: _studentIdController,
+                  decoration: _inputDecoration('Mã sinh viên', Icons.badge),
+                  validator: (v) => v?.trim().isEmpty ?? true
+                      ? 'Vui lòng nhập mã sinh viên'
+                      : null,
+                ),
+                const SizedBox(height: 16),
                 // Email
                 TextFormField(
                   controller: _emailController,
@@ -243,16 +284,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label, IconData icon) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      filled: true,
-      fillColor: Theme.of(context).inputDecorationTheme.fillColor,
     );
   }
 }

@@ -33,13 +33,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final success = await ref
         .read(authProvider.notifier)
         .login(_accountController.text.trim(), _passwordController.text.trim());
-    setState(() => _isLoading = false);
-
-    if (success) return;
-
     if (!mounted) return;
-
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    setState(() => _isLoading = false);
+    if (success) return;
+    final errorMessage = ref.read(authProvider).errorMessage;
+    if (errorMessage != null &&
+        errorMessage.toLowerCase().contains('chưa được xác thực')) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Chưa xác thực email'),
+          content: const Text(
+            'Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Hủy'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                ref
+                    .read(authProvider.notifier)
+                    .resendEmailVerification(
+                      _accountController.text.trim(),
+                      _passwordController.text.trim(),
+                    );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Đã gửi lại email xác thực.')),
+                );
+              },
+              child: const Text('Gửi lại email xác thực'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage ?? 'Đăng nhập thất bại.')),
+      );
+    }
   }
 
   @override
@@ -102,6 +136,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextFormField(
                   controller: _passwordController,
                   textInputAction: TextInputAction.done,
+                  obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Mật khẩu',
                     prefixIcon: const Icon(Icons.lock_outline),

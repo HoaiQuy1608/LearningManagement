@@ -46,7 +46,11 @@ class AuthProvider extends Notifier<AuthState> {
   AuthState build() {
     _auth.authStateChanges().listen((user) async {
       if (user != null) {
-        await _loadUserRole(user.uid);
+        if (user.emailVerified) {
+          await _loadUserRole(user.uid);
+        } else {
+          state = const AuthState(isAuthenticated: false);
+        }
       } else {
         state = const AuthState(isAuthenticated: false);
       }
@@ -57,8 +61,26 @@ class AuthProvider extends Notifier<AuthState> {
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
-      return true;
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (credential.user != null) {
+        await credential.user!.reload();
+      }
+      final user = _auth.currentUser;
+      if (user != null) {
+        if (!user.emailVerified) {
+          await _auth.signOut();
+          state = state.copyWith(
+            isLoading: false,
+            errorMessage: 'Tài khoản chưa được xác thực email.',
+          );
+          return false;
+        }
+        return true;
+      }
+      return false;
     } on FirebaseAuthException catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -68,14 +90,46 @@ class AuthProvider extends Notifier<AuthState> {
     }
   }
 
-  Future<bool> register(String email, String password) async {
+  Future<void> resendEmailVerification(String email, String password) async {
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (credential.user != null && !credential.user!.emailVerified) {
+        await credential.user!.sendEmailVerification();
+        await _auth.signOut();
+      }
+    } catch (e) {
+      print('Lỗi gửi email xác nhận: $e');
+    }
+  }
+
+  Future<bool> register({
+    required String email,
+    required String password,
+    required String name,
+    required String studentId,
+    required String phoneNumber,
+  }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      await _createDefaultUser(credential.user!.uid, email);
+      await _createDefaultUser(
+        uid: credential.user!.uid,
+        email: email,
+        name: name,
+        studentId: studentId,
+        phoneNumber: phoneNumber,
+      );
+      if (credential.user != null && !credential.user!.emailVerified) {
+        await credential.user!.sendEmailVerification();
+      }
+      await _auth.signOut();
+      state = state.copyWith(isLoading: false, isAuthenticated: false);
       return true;
     } on FirebaseAuthException catch (e) {
       state = state.copyWith(
@@ -106,7 +160,7 @@ class AuthProvider extends Notifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Loi ket noi. Vui long thu lai.',
+        errorMessage: 'Lỗi kết nối. Vui lòng thử lại.',
       );
       return false;
     }
@@ -142,7 +196,7 @@ class AuthProvider extends Notifier<AuthState> {
           userRole: user.role,
         );
       } else {
-        await _createDefaultUser(uid, _auth.currentUser!.email!);
+        await _auth.signOut();
       }
     } catch (e) {
       state = state.copyWith(
@@ -152,18 +206,26 @@ class AuthProvider extends Notifier<AuthState> {
     }
   }
 
-  Future<void> _createDefaultUser(String uid, String email) async {
+  Future<void> _createDefaultUser({
+    required String uid,
+    required String email,
+    required String name,
+    required String studentId,
+    required String phoneNumber,
+  }) async {
     final now = DateTime.now();
-    final defaultUser = UserModel(
+    final newUser = UserModel(
       uid: uid,
       email: email,
       role: UserRole.sinhVien,
-      displayName: email.split('@')[0],
+      displayName: name,
+      studentId: studentId,
+      phoneNumber: phoneNumber,
       createdAt: now,
       isActive: true,
       isEmailVerified: false,
     );
-    await _db.child('users').child(uid).set(defaultUser.toMap());
+    await _db.child('users').child(uid).set(newUser.toMap());
 
     state = state.copyWith(
       isAuthenticated: true,
