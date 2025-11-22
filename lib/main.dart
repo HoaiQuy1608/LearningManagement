@@ -85,7 +85,8 @@ class MainApp extends ConsumerWidget {
           floatingLabelBehavior: FloatingLabelBehavior.auto,
         ),
       ),
-      home:  AdminMainScreen(users:dummyUsers),//isAuthenticated ? const HomeScreen() : const LoginScreen(),
+      //home:  AdminMainScreen(users:dummyUsers),
+      home: isAuthenticated ? const HomeScreen() : const LoginScreen(),
     );
   }
 }

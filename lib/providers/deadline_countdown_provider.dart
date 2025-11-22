@@ -36,7 +36,7 @@ class DeadlineCountdownProvider
       data.forEach((key, value) {
         if (value is! Map<Object?, Object?>) return;
         final map = value;
-        final countdown = DeadlineCountdownModel.fromMap(
+        final countdown = DeadlineCountdownModel.fromJson(
           Map<String, dynamic>.from(map),
         );
         newState[countdown.scheduleId] = countdown;
@@ -65,7 +65,7 @@ class DeadlineCountdownProvider
         .child('deadline_countdowns')
         .child(_userId)
         .child(countdown.id)
-        .set(updated.toMap());
+        .set(updated.toJson());
   }
 
   Future<void> createOrUpdate(String scheduleId, DateTime deadline) async {
@@ -86,6 +86,6 @@ class DeadlineCountdownProvider
         .child('deadline_countdowns')
         .child(_userId)
         .child(id)
-        .set(countdown.toMap());
+        .set(countdown.toJson());
   }
 }

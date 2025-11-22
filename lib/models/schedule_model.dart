@@ -1,4 +1,3 @@
-
 enum ScheduleType { lesson, exam, assignment, deadline }
 
 class ScheduleModel {
@@ -53,7 +52,7 @@ class ScheduleModel {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'title': title,
@@ -68,24 +67,24 @@ class ScheduleModel {
     };
   }
 
-  factory ScheduleModel.fromMap(Map<String, dynamic> map) {
-    final endTimeStr = map['endTime'] as String?;
+  factory ScheduleModel.fromJson(Map<String, dynamic> json) {
+    final endTimeStr = json['endTime'] as String?;
     return ScheduleModel(
-      id: map['id'] as String,
-      title: map['title'] as String,
-      description: map['description'] as String?,
-      startTime: DateTime.parse(map['startTime'] as String),
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      startTime: DateTime.parse(json['startTime'] as String),
       endTime: endTimeStr != null ? DateTime.parse(endTimeStr) : null,
-      color: map['color'] as String,
+      color: json['color'] as String,
       type: ScheduleType.values.firstWhere(
-        (e) => e.name == map['type'],
+        (e) => e.name == json['type'],
         orElse: () => ScheduleType.lesson,
       ),
-      reminder: map['reminder'] as String?,
-      deadline: map['deadline'] != null
-          ? DateTime.parse(map['deadline'] as String)
+      reminder: json['reminder'] as String?,
+      deadline: json['deadline'] != null
+          ? DateTime.parse(json['deadline'] as String)
           : null,
-      isCompleted: map['isCompleted'] as bool? ?? false,
+      isCompleted: json['isCompleted'] as bool? ?? false,
     );
   }
 }

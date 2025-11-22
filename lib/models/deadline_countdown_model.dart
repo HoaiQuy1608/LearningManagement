@@ -1,4 +1,3 @@
-
 class DeadlineCountdownModel {
   final String id;
   final String scheduleId;
@@ -14,7 +13,7 @@ class DeadlineCountdownModel {
     this.completedAt,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'scheduleId': scheduleId,
@@ -24,14 +23,14 @@ class DeadlineCountdownModel {
     };
   }
 
-  factory DeadlineCountdownModel.fromMap(Map<String, dynamic> map) {
+  factory DeadlineCountdownModel.fromJson(Map<String, dynamic> json) {
     return DeadlineCountdownModel(
-      id: map['id'] as String,
-      scheduleId: map['scheduleId'] as String,
-      deadline: DateTime.parse(map['deadline'] as String),
-      isCompleted: map['isCompleted'] as bool? ?? false,
-      completedAt: map['completedAt'] != null
-          ? DateTime.parse(map['completedAt'])
+      id: json['id'] as String,
+      scheduleId: json['scheduleId'] as String,
+      deadline: DateTime.parse(json['deadline'] as String),
+      isCompleted: json['isCompleted'] as bool? ?? false,
+      completedAt: json['completedAt'] != null
+          ? DateTime.parse(json['completedAt'])
           : null,
     );
   }
