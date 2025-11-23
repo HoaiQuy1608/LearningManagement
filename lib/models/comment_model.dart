@@ -5,6 +5,7 @@ class Comment {
   final String authorName;
   final String content;
   final DateTime createdAt;
+  final List<String> likes; // danh sách userId đã like
 
   Comment({
     required this.commentId,
@@ -13,7 +14,30 @@ class Comment {
     required this.authorName,
     required this.content,
     required this.createdAt,
-  });
+    List<String>? likes,
+  }) : likes = likes ?? [];
+
+  Comment copyWith({
+    String? commentId,
+    String? postId,
+    String? userId,
+    String? authorName,
+    String? content,
+    DateTime? createdAt,
+    List<String>? likes,
+  }) {
+    return Comment(
+      commentId: commentId ?? this.commentId,
+      postId: postId ?? this.postId,
+      userId: userId ?? this.userId,
+      authorName: authorName ?? this.authorName,
+      content: content ?? this.content,
+      createdAt: createdAt ?? this.createdAt,
+      likes: likes ?? List<String>.from(this.likes),
+    );
+  }
+
+  int get likeCount => likes.length;
 
   Map<String, dynamic> toJson() => {
         "commentId": commentId,
@@ -22,6 +46,7 @@ class Comment {
         "authorName": authorName,
         "content": content,
         "createdAt": createdAt.toIso8601String(),
+        "likes": likes,
       };
 
   factory Comment.fromJson(Map<dynamic, dynamic> json) {
@@ -29,9 +54,10 @@ class Comment {
       commentId: json["commentId"],
       postId: json["postId"],
       userId: json["userId"],
-      authorName: json["authorName"],
+      authorName: json["authorName"] ?? "Người dùng",
       content: json["content"],
       createdAt: DateTime.parse(json["createdAt"]),
+      likes: (json["likes"] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 }

@@ -1,10 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:learningmanagement/firebase_options.dart';
-import 'package:learningmanagement/screens/Admin_screens/admin_main_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:learningmanagement/screens/Home_screens/home_screen.dart';
 import 'package:learningmanagement/screens/authentication/login_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -62,7 +62,7 @@ class MainApp extends ConsumerWidget {
           floatingLabelBehavior: FloatingLabelBehavior.auto,
         ),
       ),
-      home: isAuthenticated ? ForumScreen(): const LoginScreen(),
+      home: isAuthenticated ? const HomeScreen(): const LoginScreen(),
     );
   }
 }

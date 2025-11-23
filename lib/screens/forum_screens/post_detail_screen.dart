@@ -48,7 +48,7 @@ class PostDetailScreen extends ConsumerWidget {
                   ),
 
                 // Danh sách comment
-                ...comments.map((c) => CommentTile(comment: c)).toList(),
+                ...comments.map((c) => CommentTile(comment: c, postId: post.postId)).toList(),
               ],
             ),
           ),

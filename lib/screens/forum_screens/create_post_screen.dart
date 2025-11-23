@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/models/forum_post_model.dart';
+import 'package:learningmanagement/providers/auth_provider.dart';
 import 'package:learningmanagement/providers/forum_provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -34,9 +35,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
+                final authState = ref.read(authProvider); // Lấy trạng thái đăng nhập hiện tại
+                if (authState.userId == null) {
+                  // Nếu chưa có userId, báo lỗi
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Lỗi: chưa đăng nhập")),
+                  );
+                  return;
+                }
+
                 final post = ForumPost(
                   postId: Uuid().v4(),
-                  userId: "currentUserId", // TODO
+                  userId: authState.userId!, 
                   classId: null,
                   title: titleCtrl.text.trim(),
                   content: contentCtrl.text.trim(),

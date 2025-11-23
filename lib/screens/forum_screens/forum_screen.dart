@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:learningmanagement/providers/auth_provider.dart';
-import 'package:learningmanagement/screens/authentication/login_screen.dart';
 import 'post_detail_screen.dart';
 import 'create_post_screen.dart';
 import '../../widgets/forum/post_card.dart';
@@ -18,21 +16,6 @@ class ForumScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text("Forum"),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: "Đăng xuất",
-            onPressed: () async {
-              // Gọi logout từ AuthProvider
-              await ref.read(authProvider.notifier).logout();
-
-              // Quay về LoginScreen
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-              );
-            },
-          ),
-        ],
       ),
       body: posts.isEmpty
           ? const Center(child: Text("Không có bài viết nào"))

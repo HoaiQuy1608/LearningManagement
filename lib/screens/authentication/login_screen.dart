@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
+import 'package:learningmanagement/screens/Home_screens/home_screen.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -35,7 +36,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         .login(_accountController.text.trim(), _passwordController.text.trim());
     if (!mounted) return;
     setState(() => _isLoading = false);
-    if (success) return;
+    //Thành công thì chuyển hướng home screen
+    if (success) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+    );
+    return;
+  }
+
     final errorMessage = ref.read(authProvider).errorMessage;
     if (errorMessage != null &&
         errorMessage.toLowerCase().contains('chưa được xác thực')) {

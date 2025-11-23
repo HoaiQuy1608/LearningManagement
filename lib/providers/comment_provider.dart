@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../models/comment_model.dart';
-import 'auth_provider.dart'; // lấy user từ AuthState
+import '../service/comment_service.dart';
+import 'auth_provider.dart';
 
 final commentProvider =
     StateNotifierProvider.family<CommentNotifier, List<Comment>, String>(
@@ -12,56 +12,42 @@ final commentProvider =
 class CommentNotifier extends StateNotifier<List<Comment>> {
   final String postId;
   final Ref ref;
-  final db = FirebaseDatabase.instance.ref("comments");
+  final CommentService _service = CommentService();
+  Stream<List<Comment>>? _streamSubscription;
 
   CommentNotifier(this.postId, this.ref) : super([]) {
     _listenComments();
   }
 
   void _listenComments() {
-    db.child(postId).onValue.listen((event) {
-      final data = event.snapshot.value;
-
-      if (data == null || data is!Map) {
-        state = [];
-        return;
-      }
-
-      final map = Map<dynamic, dynamic>.from(data);
-
-      final comments = map.values.map((json) {
-        return Comment.fromJson(Map<String, dynamic>.from(json));
-      }).toList();
-
-      // Sắp xếp tăng dần theo thời gian
-      comments.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
+    _streamSubscription = _service.commentStream(postId);
+    _streamSubscription!.listen((comments) {
       state = comments;
     });
   }
 
   Future<void> addComment(String content) async {
     final authState = ref.read(authProvider);
-
-    final userId = authState.userId;
-    final displayName = authState.displayName;
-
-    if (userId == null || displayName == null) {
-      throw Exception("Người dùng chưa đăng nhập hoặc chưa có tên hiển thị");
-    }
-
-    final newRef = db.child(postId).push();
-    final commentId = newRef.key!;
+    if (authState.userId == null) return;
 
     final comment = Comment(
-      commentId: commentId,
+      commentId: "",
       postId: postId,
-      userId: userId,
-      authorName: displayName,
+      userId: authState.userId!,
+      authorName: authState.displayName ?? "Người dùng",
       content: content,
       createdAt: DateTime.now(),
+      likes: [],
     );
 
-    await newRef.set(comment.toJson());
+    await _service.addComment(comment);
+    // Không cần reload nữa, stream tự cập nhật
+  }
+
+  Future<void> toggleLike(String commentId) async {
+    final authState = ref.read(authProvider);
+    if (authState.userId == null) return;
+    await _service.toggleLikeComment(postId, commentId, authState.userId!);
+    // Stream sẽ tự cập nhật state mới
   }
 }
