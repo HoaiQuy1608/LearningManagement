@@ -7,9 +7,7 @@ import 'package:learningmanagement/screens/Admin_screens/UserManagement/user_man
 import 'admin_home.dart';
 
 class AdminMainScreen extends ConsumerStatefulWidget {
-  final List<UserModel> users;
-
-  const AdminMainScreen({super.key, required this.users});
+  const AdminMainScreen({super.key});
 
   @override
   ConsumerState<AdminMainScreen> createState() => _AdminMainScreenState();

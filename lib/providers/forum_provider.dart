@@ -1,83 +1,58 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:learningmanagement/models/forum_post_model.dart';
 
-@immutable
-class Post {
-  final String title;
-  final String author;
-  final int replyCount;
-  final int likeCount;
+final forumPostProvider =
+    StateNotifierProvider<ForumPostNotifier, List<ForumPost>>(
+  (ref) => ForumPostNotifier(),
+);
 
-  const Post({
-    required this.title,
-    required this.author,
-    this.replyCount = 0,
-    this.likeCount = 0,
-  });
-}
-
-@immutable
-class ForumState {
-  final List<Post> posts;
-  final bool isLoading;
-
-  const ForumState({this.posts = const [], this.isLoading = false});
-
-  ForumState copyWith({List<Post>? posts, bool? isLoading}) {
-    return ForumState(
-      posts: posts ?? this.posts,
-      isLoading: isLoading ?? this.isLoading,
-    );
-  }
-}
-
-class ForumProvider extends Notifier<ForumState> {
-  @override
-  ForumState build() {
-    return const ForumState(
-      posts: [
-        Post(
-          title: 'Hỏi về cách tính điểm Giá trị thặng dư?',
-          author: 'SinhVienA',
-          replyCount: 5,
-          likeCount: 10,
-        ),
-        Post(
-          title: 'Cần xin tài liệu Triết học (Bản full)',
-          author: 'SinhVienB',
-          replyCount: 2,
-          likeCount: 8,
-        ),
-        Post(
-          title: 'Flutter Riverpod 3.0 khó quá :(',
-          author: 'SinhVienC',
-          replyCount: 15,
-          likeCount: 20,
-        ),
-      ],
-    );
+class ForumPostNotifier extends StateNotifier<List<ForumPost>> {
+  ForumPostNotifier() : super([]) {
+    _listenPosts();
   }
 
-  Future<void> createPost({
-    required String title,
-    required String content,
-    required String author,
-  }) async {
-    state = state.copyWith(isLoading: true);
+  final _db = FirebaseDatabase.instance.ref("forum_posts");
 
-    await Future.delayed(const Duration(seconds: 1));
+  void _listenPosts() {
+    _db.onValue.listen((event) {
+      final data = event.snapshot.value;
 
-    final newPost = Post(
-      title: title,
-      author: author,
-      replyCount: 0,
-      likeCount: 0,
-    );
+      if (data == null) {
+        state = [];
+        return;
+      }
 
-    state = state.copyWith(isLoading: false, posts: [newPost, ...state.posts]);
+      final map = Map<String, dynamic>.from(data as Map);
+
+      final posts = map.values.map((e) {
+        return ForumPost.fromJson(Map<String, dynamic>.from(e));
+      }).toList();
+
+      posts.sort((a, b) {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+
+      state = posts;
+    });
+  }
+
+  Future<void> createPost(ForumPost post) async {
+    await _db.child(post.postId).set(post.toJson());
+  }
+
+  Future<void> togglePin(String id, bool pin) async {
+    await _db.child(id).update({"isPinned": pin});
+  }
+
+  Future<void> toggleLock(String id, bool lock) async {
+    await _db.child(id).update({"isLocked": lock});
+  }
+
+  Future<void> deletePost(String id) async {
+    await _db.child(id).remove();
   }
 }
-
-final forumProvider = NotifierProvider<ForumProvider, ForumState>(() {
-  return ForumProvider();
-});

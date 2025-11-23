@@ -1,14 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:learningmanagement/firebase_options.dart';
-import 'package:learningmanagement/models/user_model.dart';
-import 'package:learningmanagement/screens/Admin_screens/admin_home.dart';
 import 'package:learningmanagement/screens/Admin_screens/admin_main_screen.dart';
-import 'package:learningmanagement/screens/authentication/login_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
-import 'package:learningmanagement/screens/common/home_screen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:learningmanagement/screens/authentication/login_screen.dart';
+import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -52,27 +50,6 @@ class MainApp extends ConsumerWidget {
     final isAuthenticated = ref.watch(
       authProvider.select((state) => state.isAuthenticated),
     );
-
-    final dummyUsers = [
-      UserModel(
-        uid: '1',
-        email: 'user1@gmail.com',
-        role: UserRole.sinhVien,
-        displayName: 'Nguyễn Văn A',
-        isActive: true,
-        isEmailVerified: true,
-        createdAt: DateTime.now(),
-      ),
-      UserModel(
-        uid: '2',
-        email: 'teacher1@gmail.com',
-        role: UserRole.giangVien,
-        displayName: 'Trần Thị B',
-        isActive: true,
-        isEmailVerified: false,
-        createdAt: DateTime.now(),
-      ),
-    ];
     return MaterialApp(
       title: 'Quản lý Học tập',
       debugShowCheckedModeBanner: false,
@@ -85,7 +62,7 @@ class MainApp extends ConsumerWidget {
           floatingLabelBehavior: FloatingLabelBehavior.auto,
         ),
       ),
-      home:  AdminMainScreen(users:dummyUsers),//isAuthenticated ? const HomeScreen() : const LoginScreen(),
+      home: isAuthenticated ? ForumScreen(): const LoginScreen(),
     );
   }
 }
