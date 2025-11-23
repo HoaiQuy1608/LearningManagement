@@ -18,6 +18,8 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
 
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+
   static const Map<ScheduleType, String> _typeName = {
     ScheduleType.lesson: 'Buổi học',
     ScheduleType.exam: 'Bài kiểm tra',
@@ -59,6 +61,18 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focusedDay,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+
+            calendarFormat: _calendarFormat,
+            availableCalendarFormats: const {
+              CalendarFormat.month: 'Tháng',
+              CalendarFormat.twoWeeks: '2 Tuần',
+              CalendarFormat.week: 'Tuần',
+            },
+            onFormatChanged: (format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            },
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
                 _selectedDay = selectedDay;
@@ -67,8 +81,9 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
             },
             onPageChanged: (focusedDay) => _focusedDay = focusedDay,
             headerStyle: const HeaderStyle(
-              formatButtonVisible: false,
+              formatButtonVisible: true,
               titleCentered: true,
+              formatButtonShowsNext: false,
             ),
             calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
@@ -121,18 +136,34 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
         // === DANH SÁCH SỰ KIỆN ===
         Expanded(
           child: selectedEvents.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Không có sự kiện',
-                        style: TextStyle(color: Colors.grey[600]),
+              ? LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.event_busy,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Không có sự kiện',
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(8),
@@ -140,71 +171,116 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
                   itemBuilder: (context, index) {
                     final event = selectedEvents[index];
                     final countdown = countdownMap[event.id];
+                    final eventColor = _getColor(event.color);
                     return Card(
-                      margin: const EdgeInsets.symmetric(
-                        vertical: 6,
-                        horizontal: 8,
-                      ),
+                      margin: const EdgeInsets.only(bottom: 12),
                       elevation: 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey.shade200),
                       ),
-                      child: ListTile(
-                        leading: Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: _getColor(event.color),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        title: Text(
-                          event.title,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (event.description != null)
-                              Text(
-                                event.description!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            Text(
-                              '${event.startTime.hour}:${event.startTime.minute.toString().padLeft(2, '0')} • ${_typeName[event.type] ?? event.type.name}',
-                              style: TextStyle(
-                                color: theme.primaryColor,
-                                fontSize: 12,
-                              ),
-                            ),
-                            // Hiển thị đồng hồ đếm ngược
-                            if (event.type != ScheduleType.lesson &&
-                                countdown != null &&
-                                !countdown.isCompleted)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.timer,
-                                      size: 12,
-                                      color: Colors.red,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    CountdownTimer(
-                                      deadline: countdown.deadline,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                        // Kết nối đến chi tiết sự kiện
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => EventDetailScreen(event: event),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: eventColor,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      event.title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.access_time,
+                                          size: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${event.startTime.hour}:${event.startTime.minute.toString().padLeft(2, '0')}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: eventColor.withAlpha(30),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            _typeName[event.type] ?? 'Sự kiện',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: eventColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (event.type != ScheduleType.lesson &&
+                                        countdown != null &&
+                                        !countdown.isCompleted)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 8.0,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.timer_outlined,
+                                              size: 14,
+                                              color: Colors.redAccent,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            CountdownTimer(
+                                              deadline: countdown.deadline,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: Colors.grey,
+                              ),
+                            ],
                           ),
                         ),
                       ),

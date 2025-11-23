@@ -12,7 +12,7 @@ final deadlineCountdownProvider =
 class DeadlineCountdownProvider
     extends Notifier<Map<String, DeadlineCountdownModel>> {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
-  late final String _userId;
+  String? _userId;
 
   @override
   Map<String, DeadlineCountdownModel> build() {
@@ -26,7 +26,8 @@ class DeadlineCountdownProvider
   }
 
   void _listenToCountdowns() {
-    _db.child('deadline_countdowns').child(_userId).onValue.listen((event) {
+    if (_userId == null) return;
+    _db.child('deadline_countdowns').child(_userId!).onValue.listen((event) {
       final data = event.snapshot.value as Map<Object?, Object?>?;
       if (data == null) {
         state = {};
@@ -35,11 +36,13 @@ class DeadlineCountdownProvider
       final Map<String, DeadlineCountdownModel> newState = {};
       data.forEach((key, value) {
         if (value is! Map<Object?, Object?>) return;
-        final map = value;
-        final countdown = DeadlineCountdownModel.fromMap(
-          Map<String, dynamic>.from(map),
-        );
-        newState[countdown.scheduleId] = countdown;
+        try {
+          final map = Map<String, dynamic>.from(value);
+          final countdown = DeadlineCountdownModel.fromJson(map);
+          newState[countdown.scheduleId] = countdown;
+        } catch (e) {
+          print('Loi parse deadline: $e');
+        }
       });
       state = newState;
     });
@@ -49,6 +52,7 @@ class DeadlineCountdownProvider
       state[scheduleId];
 
   Future<void> markAsCompleted(String scheduleId) async {
+    if (_userId == null) return;
     final countdown = state[scheduleId];
     if (countdown == null || countdown.isCompleted) return;
     final updated = DeadlineCountdownModel(
@@ -63,18 +67,19 @@ class DeadlineCountdownProvider
 
     await _db
         .child('deadline_countdowns')
-        .child(_userId)
+        .child(_userId!)
         .child(countdown.id)
-        .set(updated.toMap());
+        .set(updated.toJson());
   }
 
   Future<void> createOrUpdate(String scheduleId, DateTime deadline) async {
+    if (_userId == null) return;
     final existing = state[scheduleId];
     String id;
     if (existing != null) {
       id = existing.id;
     } else {
-      id = _db.child('deadline_countdowns').child(_userId).push().key!;
+      id = _db.child('deadline_countdowns').child(_userId!).push().key!;
     }
     final countdown = DeadlineCountdownModel(
       id: id,
@@ -84,8 +89,8 @@ class DeadlineCountdownProvider
     state = {...state, scheduleId: countdown};
     await _db
         .child('deadline_countdowns')
-        .child(_userId)
+        .child(_userId!)
         .child(id)
-        .set(countdown.toMap());
+        .set(countdown.toJson());
   }
 }

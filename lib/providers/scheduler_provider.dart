@@ -9,7 +9,7 @@ import 'package:learningmanagement/service/notifications_service.dart';
 class SchedulerProvider
     extends Notifier<LinkedHashMap<DateTime, List<ScheduleModel>>> {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
-  late final String _userId;
+  String? _userId;
   ScheduleModel? _lastDeleted;
 
   @override
@@ -30,29 +30,46 @@ class SchedulerProvider
   }
 
   void _listenToEvents() {
-    _db.child('schedules').child(_userId).onValue.listen((event) {
-      final data = event.snapshot.value as Map<Object?, Object?>?;
-      if (data == null) {
-        state = LinkedHashMap<DateTime, List<ScheduleModel>>(
+    if (_userId == null) return;
+    _db.child('schedules').child(_userId!).onValue.listen((event) {
+      final rawData = event.snapshot.value;
+      if (rawData == null) {
+        state = LinkedHashMap(
           equals: isSameDay,
           hashCode: (key) => key.day * 1000000 + key.month * 10000 + key.year,
         );
         return;
       }
       final Map<DateTime, List<ScheduleModel>> eventsMap = {};
-      data.forEach((key, value) {
-        if (value is! Map<Object?, Object?>) return;
-        final eventMap = value;
-        final event = ScheduleModel.fromMap(
-          Map<String, dynamic>.from(eventMap),
-        );
-        final eventDate = DateTime(
-          event.startTime.year,
-          event.startTime.month,
-          event.startTime.day,
-        );
-        eventsMap.putIfAbsent(eventDate, () => []).add(event);
-      });
+      void processItem(dynamic value) {
+        try {
+          if (value == null) return;
+          final eventMap = Map<String, dynamic>.from(value as Map);
+          final scheduleEvent = ScheduleModel.fromJson(eventMap);
+
+          final eventDate = DateTime(
+            scheduleEvent.startTime.year,
+            scheduleEvent.startTime.month,
+            scheduleEvent.startTime.day,
+          );
+          eventsMap.putIfAbsent(eventDate, () => []).add(scheduleEvent);
+        } catch (e) {
+          print('Bỏ qua mục không hợp lệ: $e');
+        }
+      }
+
+      try {
+        if (rawData is Map) {
+          rawData.forEach((key, value) => processItem(value));
+        } else if (rawData is List) {
+          for (var value in rawData) {
+            processItem(value);
+          }
+        }
+      } catch (e) {
+        print('Lỗi khi xử lý dữ liệu lịch trình: $e');
+      }
+
       final newState = LinkedHashMap<DateTime, List<ScheduleModel>>(
         equals: isSameDay,
         hashCode: (key) => key.day * 1000000 + key.month * 10000 + key.year,
@@ -64,6 +81,7 @@ class SchedulerProvider
   List<ScheduleModel> getEventsForDay(DateTime day) => state[day] ?? [];
 
   Future<void> addEvent(ScheduleModel event) async {
+    if (_userId == null) return;
     final day = DateTime(
       event.startTime.year,
       event.startTime.month,
@@ -77,9 +95,9 @@ class SchedulerProvider
     state = newState;
     await _db
         .child('schedules')
-        .child(_userId)
+        .child(_userId!)
         .child(event.id)
-        .set(event.toMap());
+        .set(event.toJson());
     await NotificationsService.schedule(event);
 
     if (event.endTime != null) {
@@ -103,6 +121,7 @@ class SchedulerProvider
   }
 
   Future<void> removeEvent(String eventId) async {
+    if (_userId == null) return;
     if (!state.values.any((list) => list.any((ev) => ev.id == eventId))) {
       return;
     }
@@ -120,7 +139,7 @@ class SchedulerProvider
       newState.remove(day);
     }
     state = newState;
-    await _db.child('schedules').child(_userId).child(eventId).remove();
+    await _db.child('schedules').child(_userId!).child(eventId).remove();
     await NotificationsService.cancel(eventId);
   }
 
@@ -132,6 +151,7 @@ class SchedulerProvider
   }
 
   Future<void> editEvent(ScheduleModel updateEvent) async {
+    if (_userId == null) return;
     if (!state.values.any(
       (list) => list.any((ev) => ev.id == updateEvent.id),
     )) {
@@ -162,9 +182,9 @@ class SchedulerProvider
     state = newState;
     await _db
         .child('schedules')
-        .child(_userId)
+        .child(_userId!)
         .child(updateEvent.id)
-        .set(updateEvent.toMap());
+        .set(updateEvent.toJson());
 
     await NotificationsService.cancel(updateEvent.id);
     if (updateEvent.reminder != null && updateEvent.reminder != 'Không nhắc') {

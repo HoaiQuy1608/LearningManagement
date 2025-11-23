@@ -6,9 +6,15 @@ import 'package:learningmanagement/providers/scheduler_provider.dart';
 import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
 import 'package:learningmanagement/screens/Student_screens/scheduler/edit_event_screen.dart';
 
-class EventDetailScreen extends ConsumerWidget {
+class EventDetailScreen extends ConsumerStatefulWidget {
   final ScheduleModel event;
   const EventDetailScreen({super.key, required this.event});
+  @override
+  ConsumerState<EventDetailScreen> createState() => _EventDetailScreenState();
+}
+
+class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
+  late ScheduleModel _currentEvent;
 
   static const Map<ScheduleType, String> _typeName = {
     ScheduleType.lesson: 'Buổi học',
@@ -17,13 +23,31 @@ class EventDetailScreen extends ConsumerWidget {
     ScheduleType.deadline: 'Deadline',
   };
 
+  @override
+  void initState() {
+    super.initState();
+    _currentEvent = widget.event;
+  }
+
+  Future<void> _navigateToEdit() async {
+    final updatedEvent = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EditEventScreen(event: _currentEvent)),
+    );
+    if (updatedEvent != null && updatedEvent is ScheduleModel) {
+      setState(() {
+        _currentEvent = updatedEvent;
+      });
+    }
+  }
+
   void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Xác nhận xóa'),
         content: Text(
-          'Bạn có chắc chắn muốn xóa sự kiện "${event.title}" không?',
+          'Bạn có chắc chắn muốn xóa sự kiện "${_currentEvent.title}" không?',
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         actions: [
@@ -34,17 +58,11 @@ class EventDetailScreen extends ConsumerWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              // 1. Đóng hộp thoại trước
               Navigator.pop(dialogContext);
-              // 2. Capture (Lưu) Notifier để dùng sau khi màn hình đóng
               final schedulerNotifier = ref.read(schedulerProvider.notifier);
-              // 3. Gọi lệnh xóa
-              await schedulerNotifier.removeEvent(event.id);
-              // 4. Kiểm tra context của màn hình Chi tiết
+              await schedulerNotifier.removeEvent(_currentEvent.id);
               if (!context.mounted) return;
-              // 5. Đóng màn hình Chi tiết
               Navigator.pop(context);
-              // 6. Hiện thông báo hoàn tác
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Đã xóa sự kiện'),
@@ -65,27 +83,17 @@ class EventDetailScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final countdown = ref.watch(
-      deadlineCountdownProvider.select((map) => map[event.id]),
+      deadlineCountdownProvider.select((map) => map[_currentEvent.id]),
     );
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(event.title),
+        title: Text(_currentEvent.title),
         centerTitle: true,
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditEventScreen(event: event),
-                ),
-              );
-            },
-            icon: Icon(Icons.edit),
-          ),
+          IconButton(onPressed: _navigateToEdit, icon: Icon(Icons.edit)),
         ],
       ),
       body: Padding(
@@ -97,7 +105,7 @@ class EventDetailScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Color(
-                  int.parse(event.color.replaceFirst('#', '0xFF')),
+                  int.parse(_currentEvent.color.replaceFirst('#', '0xFF')),
                 ).withAlpha(25),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -106,15 +114,17 @@ class EventDetailScreen extends ConsumerWidget {
                   Icon(
                     Icons.category,
                     color: Color(
-                      int.parse(event.color.replaceFirst('#', '0xFF')),
+                      int.parse(_currentEvent.color.replaceFirst('#', '0xFF')),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _typeName[event.type] ?? 'Sự kiện',
+                    _typeName[_currentEvent.type] ?? 'Sự kiện',
                     style: TextStyle(
                       color: Color(
-                        int.parse(event.color.replaceFirst('#', '0xFF')),
+                        int.parse(
+                          _currentEvent.color.replaceFirst('#', '0xFF'),
+                        ),
                       ),
                       fontWeight: FontWeight.bold,
                     ),
@@ -124,7 +134,8 @@ class EventDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             // --- ĐỒNG HỒ ĐẾM NGƯỢC (NẾU LÀ DEADLINE) ---
-            if (event.type != ScheduleType.lesson && countdown != null) ...[
+            if (_currentEvent.type != ScheduleType.lesson &&
+                countdown != null) ...[
               Text(
                 'THỜI GIAN CÒN LẠI:',
                 style: TextStyle(
@@ -142,7 +153,7 @@ class EventDetailScreen extends ConsumerWidget {
                   onPressed: () {
                     ref
                         .read(deadlineCountdownProvider.notifier)
-                        .markAsCompleted(event.id);
+                        .markAsCompleted(_currentEvent.id);
                   },
                 ),
               if (countdown.isCompleted)
@@ -162,19 +173,21 @@ class EventDetailScreen extends ConsumerWidget {
             _buildInfoRow(
               Icons.access_time,
               'Thời gian',
-              '${event.startTime.hour}:${event.startTime.minute.toString().padLeft(2, '0')} ${event.endTime != null ? '- ${event.endTime!.hour}:${event.endTime!.minute.toString().padLeft(2, '0')}' : ''}',
+              '${_currentEvent.startTime.hour}:${_currentEvent.startTime.minute.toString().padLeft(2, '0')} ${_currentEvent.endTime != null ? '- ${_currentEvent.endTime!.hour}:${_currentEvent.endTime!.minute.toString().padLeft(2, '0')}' : ''}',
             ),
-            if (event.reminder != null && event.reminder != 'Không nhắc')
+            if (_currentEvent.reminder != null &&
+                _currentEvent.reminder != 'Không nhắc')
               _buildInfoRow(
                 Icons.notifications_active_outlined,
                 'Nhắc nhở',
-                event.reminder!,
+                _currentEvent.reminder!,
               ),
-            if (event.description != null && event.description!.isNotEmpty)
+            if (_currentEvent.description != null &&
+                _currentEvent.description!.isNotEmpty)
               _buildInfoRow(
                 Icons.notes_outlined,
                 'Ghi chú',
-                event.description!,
+                _currentEvent.description!,
               ),
 
             const Spacer(),

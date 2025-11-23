@@ -4,6 +4,7 @@ import 'package:learningmanagement/providers/scheduler_provider.dart';
 import 'package:learningmanagement/models/schedule_model.dart';
 import 'package:uuid/uuid.dart';
 import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
+import 'package:learningmanagement/widgets/datetime_selection_tile.dart';
 
 class AddEventScreen extends ConsumerStatefulWidget {
   const AddEventScreen({super.key});
@@ -20,6 +21,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _startTime = TimeOfDay.now();
   TimeOfDay? _endTime;
+  DateTime? _endDate;
   String _selectedType = 'Buổi học';
   String? _selectedReminder;
   String _selectedColor = '#FF6B6B';
@@ -82,105 +84,93 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                 onChanged: (v) => setState(() => _selectedType = v!),
               ),
               const SizedBox(height: 16),
-
-              // === NGÀY ===
-              ListTile(
-                leading: const Icon(Icons.calendar_today),
-                title: Text(
-                  'Ngày: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                ),
-                trailing: const Icon(Icons.edit),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime(2030),
-                  );
-                  if (date != null) setState(() => _selectedDate = date);
+              // === GIỜ BẮT ĐẦU / KẾT THÚC ===
+              // === 1. BẮT ĐẦU ===
+              DateTimeSelectionTile(
+                title: 'Bắt đầu',
+                icon: Icons.play_circle_outline,
+                iconColor: Colors.green,
+                date: _selectedDate,
+                time: _startTime,
+                onDateTimeSelected: (date, time) {
+                  setState(() {
+                    _selectedDate = date;
+                    _startTime = time;
+                    if (_endDate != null && _endTime != null) {
+                      final start = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                      final end = DateTime(
+                        _endDate!.year,
+                        _endDate!.month,
+                        _endDate!.day,
+                        _endTime!.hour,
+                        _endTime!.minute,
+                      );
+                      if (end.isBefore(start)) {
+                        _endDate = null;
+                        _endTime = null;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã reset ngày kết thúc'),
+                          ),
+                        );
+                      }
+                    }
+                  });
                 },
               ),
-              const SizedBox(height: 8),
-
-              // === GIỜ BẮT ĐẦU / KẾT THÚC ===
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      leading: const Icon(Icons.access_time),
-                      title: Text('Bắt đầu: ${_startTime.format(context)}'),
-                      onTap: () async {
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime: _startTime,
-                        );
-                        if (time != null) setState(() => _startTime = time);
-                      },
-                    ),
-                  ),
-                  Expanded(
-                    child: ListTile(
-                      leading: const Icon(Icons.access_time),
-                      title: Text(
-                        _endTime != null
-                            ? 'Kết thúc: ${_endTime!.format(context)}'
-                            : 'Kết thúc (tùy chọn)',
-                      ),
-                      onTap: () async {
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime: _startTime,
-                        );
-                        if (time != null) setState(() => _endTime = time);
-                      },
-                    ),
-                  ),
-                ],
+              const Divider(height: 1),
+              // === 2. KẾT THÚC ===
+              DateTimeSelectionTile(
+                title: 'Kết thúc',
+                icon: Icons.stop_circle_outlined,
+                iconColor: Colors.red,
+                isOptional: true,
+                date: _endDate,
+                time: _endTime,
+                onClear: () => setState(() {
+                  _endDate = null;
+                  _endTime = null;
+                }),
+                onDateTimeSelected: (date, time) {
+                  setState(() {
+                    _endDate = date;
+                    _endTime = time;
+                  });
+                },
               ),
               const SizedBox(height: 16),
-
               // === DEADLINE (chỉ hiện khi không phải Buổi học) ===
-              if (_selectedType != 'Buổi học')
-                Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    ListTile(
-                      leading: const Icon(Icons.flag, color: Colors.red),
-                      title: Text(
-                        _deadline == null
-                            ? 'Chọn deadline'
-                            : 'Deadline: ${_deadline!.day}/${_deadline!.month} ${_deadline!.hour}:${_deadline!.minute.toString().padLeft(2, '0')}',
-                      ),
-                      trailing: const Icon(Icons.edit),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: _selectedDate,
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime(2030),
-                        );
-                        if (date == null) return;
-                        if (!context.mounted) return;
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.now(),
-                        );
-                        if (time != null) {
-                          setState(() {
-                            _deadline = DateTime(
-                              date.year,
-                              date.month,
-                              date.day,
-                              time.hour,
-                              time.minute,
-                            );
-                          });
-                        }
-                      },
-                    ),
-                  ],
+              if (_selectedType != 'Buổi học') ...[
+                const Divider(height: 1),
+                DateTimeSelectionTile(
+                  title: 'Hạn chót (Deadline)',
+                  icon: Icons.flag,
+                  iconColor: Colors.red,
+                  isOptional: false,
+                  date: _deadline,
+                  time: _deadline != null
+                      ? TimeOfDay.fromDateTime(_deadline!)
+                      : null,
+                  onDateTimeSelected: (date, time) {
+                    setState(() {
+                      _deadline = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    });
+                  },
                 ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
               // === NHẮC NHỞ ===
               DropdownButtonFormField<String>(
                 initialValue: _selectedReminder,
