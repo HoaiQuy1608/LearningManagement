@@ -4,7 +4,7 @@ import 'package:learningmanagement/providers/scheduler_provider.dart';
 import 'package:learningmanagement/models/schedule_model.dart';
 import 'package:uuid/uuid.dart';
 import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
-import 'package:learningmanagement/widgets/datetime_selection_tile.dart';
+import 'package:learningmanagement/widgets/schedules/datetime_selection_tile.dart';
 
 class AddEventScreen extends ConsumerStatefulWidget {
   const AddEventScreen({super.key});

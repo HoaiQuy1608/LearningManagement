@@ -5,7 +5,7 @@ import 'package:learningmanagement/providers/scheduler_provider.dart';
 import 'package:learningmanagement/screens/Student_screens/scheduler/event_detail_screen.dart';
 import 'package:learningmanagement/models/schedule_model.dart';
 import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
-import 'package:learningmanagement/widgets/countdown_timer.dart';
+import 'package:learningmanagement/widgets/schedules/countdown_timer.dart';
 import 'package:learningmanagement/screens/Student_screens/scheduler/student_stats_screen.dart';
 
 class SchedulerScreen extends ConsumerStatefulWidget {

@@ -15,21 +15,39 @@ class EssayAnswer {
     this.teacherComment,
   });
 
+  EssayAnswer copyWith({
+    String? essayId,
+    String? attemptId,
+    String? questionId,
+    String? answerText,
+    double? teacherScore,
+    String? teacherComment,
+  }) {
+    return EssayAnswer(
+      essayId: essayId ?? this.essayId,
+      attemptId: attemptId ?? this.attemptId,
+      questionId: questionId ?? this.questionId,
+      answerText: answerText ?? this.answerText,
+      teacherScore: teacherScore ?? this.teacherScore,
+      teacherComment: teacherComment ?? this.teacherComment,
+    );
+  }
+
   factory EssayAnswer.fromJson(Map<String, dynamic> json) => EssayAnswer(
-        essayId: json['essayId'],
-        attemptId: json['attemptId'],
-        questionId: json['questionId'],
-        answerText: json['answerText'],
-        teacherScore: (json['teacherScore'] ?? 0).toDouble(),
-        teacherComment: json['teacherComment'],
-      );
+    essayId: json['essayId'] ?? '',
+    attemptId: json['attemptId'] ?? '',
+    questionId: json['questionId'] ?? '',
+    answerText: json['answerText'] ?? '',
+    teacherScore: (json['teacherScore'] ?? 0).toDouble(),
+    teacherComment: json['teacherComment'],
+  );
 
   Map<String, dynamic> toJson() => {
-        'essayId': essayId,
-        'attemptId': attemptId,
-        'questionId': questionId,
-        'answerText': answerText,
-        'teacherScore': teacherScore,
-        'teacherComment': teacherComment,
-      };
+    'essayId': essayId,
+    'attemptId': attemptId,
+    'questionId': questionId,
+    'answerText': answerText,
+    'teacherScore': teacherScore,
+    'teacherComment': teacherComment,
+  };
 }

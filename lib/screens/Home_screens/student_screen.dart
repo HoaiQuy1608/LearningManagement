@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
+import 'package:learningmanagement/screens/Student_screens/Quiz_screens/quiz_list_screen.dart';
 
 class StudentNav extends StatefulWidget {
   const StudentNav({super.key});
@@ -14,6 +15,7 @@ class _StudentNavState extends State<StudentNav> {
 
   final screens = [
     const ForumScreen(),
+    const QuizListScreen(),
     const ProfileScreen(),
   ];
 
@@ -26,6 +28,7 @@ class _StudentNavState extends State<StudentNav> {
         onTap: (i) => setState(() => index = i),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: "Forum"),
+          BottomNavigationBarItem(icon: Icon(Icons.quiz), label: "Quiz"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
