@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:learningmanagement/models/answer_model.dart';
 import 'package:learningmanagement/models/quiz_model.dart';
 import 'package:learningmanagement/models/question_model.dart';
 import 'package:learningmanagement/providers/quiz_attempt_provider.dart';
+import 'package:learningmanagement/widgets/quizs/answer_option_tile.dart';
 import 'package:learningmanagement/screens/Student_screens/Quiz_screens/quiz_result_screen.dart';
 
 class TakeQuizScreen extends ConsumerStatefulWidget {
@@ -14,12 +16,33 @@ class TakeQuizScreen extends ConsumerStatefulWidget {
 }
 
 class _TakeQuizScreenState extends ConsumerState<TakeQuizScreen> {
+  late List<Question> _processedQuestions;
   @override
   void initState() {
     super.initState();
+    _processedQuestions = List.from(widget.quiz.questions);
+    if (widget.quiz.randomQuestions) {
+      _processedQuestions.shuffle();
+    }
+    if (widget.quiz.randomAnswers) {
+      _processedQuestions = _processedQuestions.map((q) {
+        if (q.type == QuestionType.essay) return q;
+
+        final shuffledOptions = List<AnswerOption>.from(q.options);
+        shuffledOptions.shuffle();
+
+        return q.copyWith(options: shuffledOptions);
+      }).toList();
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(quizAttemptProvider.notifier).startQuiz(widget.quiz);
     });
+  }
+
+  String _formatTime(int seconds) {
+    final m = (seconds / 60).floor().toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
@@ -29,7 +52,7 @@ class _TakeQuizScreenState extends ConsumerState<TakeQuizScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final qIndex = attempt.currentQuestionIndex;
-    final question = widget.quiz.questions[qIndex];
+    final question = _processedQuestions[qIndex];
 
     List<String> selectedOpts = [];
     try {
@@ -54,7 +77,7 @@ class _TakeQuizScreenState extends ConsumerState<TakeQuizScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Center(
               child: Text(
-                '${(attempt.timeLeft ~/ 60).toString().padLeft(2, '0')}:${(attempt.timeLeft % 60).toString().padLeft(2, '0')}',
+                _formatTime(attempt.timeLeft),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -68,7 +91,7 @@ class _TakeQuizScreenState extends ConsumerState<TakeQuizScreen> {
       body: Column(
         children: [
           LinearProgressIndicator(
-            value: (qIndex + 1) / widget.quiz.questions.length,
+            value: (qIndex + 1) / _processedQuestions.length,
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -108,47 +131,18 @@ class _TakeQuizScreenState extends ConsumerState<TakeQuizScreen> {
                     )
                   else
                     ...question.options.map((opt) {
-                      final isSelected = selectedOpts.contains(opt.answerId);
-                      return Card(
-                        elevation: 0,
-                        color: isSelected ? Colors.blue[50] : Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(
-                            color: isSelected
-                                ? Colors.blue
-                                : Colors.grey.shade300,
-                          ),
-                        ),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          onTap: () => ref
-                              .read(quizAttemptProvider.notifier)
-                              .selectAnswer(
-                                question.questionId,
-                                opt.answerId,
-                                question.type == QuestionType.multiSelect,
-                              ),
-                          leading: Icon(
-                            isSelected
-                                ? (question.type == QuestionType.multiSelect
-                                      ? Icons.check_box
-                                      : Icons.radio_button_checked)
-                                : (question.type == QuestionType.multiSelect
-                                      ? Icons.check_box_outline_blank
-                                      : Icons.radio_button_unchecked),
-                            color: isSelected ? Colors.blue : Colors.grey,
-                          ),
-                          title: Text(
-                            opt.answerText,
-                            style: TextStyle(
-                              color: isSelected ? Colors.blue : Colors.black,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                      return AnswerOptionTile(
+                        text: opt.answerText,
+                        isSelected: selectedOpts.contains(opt.answerId),
+                        isMultiSelect:
+                            question.type == QuestionType.multiSelect,
+                        onTap: () => ref
+                            .read(quizAttemptProvider.notifier)
+                            .selectAnswer(
+                              question.questionId,
+                              opt.answerId,
+                              question.type == QuestionType.multiSelect,
                             ),
-                          ),
-                        ),
                       );
                     }),
                 ],
@@ -173,7 +167,7 @@ class _TakeQuizScreenState extends ConsumerState<TakeQuizScreen> {
                 else
                   const SizedBox(width: 100),
 
-                if (qIndex < widget.quiz.questions.length - 1)
+                if (qIndex < _processedQuestions.length - 1)
                   ElevatedButton(
                     onPressed: () =>
                         ref.read(quizAttemptProvider.notifier).nextQuestion(),

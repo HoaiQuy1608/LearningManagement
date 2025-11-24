@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learningmanagement/models/answer_model.dart';
 import 'package:uuid/uuid.dart';
 import 'package:learningmanagement/models/question_model.dart';
+import 'package:learningmanagement/widgets/quizs/option_input_item.dart';
 
 class AddQuestionScreen extends StatefulWidget {
   const AddQuestionScreen({super.key});
@@ -194,25 +195,12 @@ class _AddQuestionScreenState extends State<AddQuestionScreen> {
               ..._tempOptions.asMap().entries.map((entry) {
                 final index = entry.key;
                 final opt = entry.value;
-                return Card(
-                  color: opt['isCorrect'] ? Colors.green[50] : null,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    leading: Checkbox(
-                      value: opt['isCorrect'],
-                      shape: _selectedType == QuestionType.multipleChoice
-                          ? const CircleBorder()
-                          : null,
-                      activeColor: Colors.green,
-                      onChanged: (_) => _toggleCorrect(index),
-                    ),
-                    title: Text(opt['text']),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: () => _removeOption(index),
-                    ),
-                    onTap: () => _toggleCorrect(index),
-                  ),
+                return OptionInputItem(
+                  text: opt['text'],
+                  isCorrect: opt['isCorrect'],
+                  type: _selectedType,
+                  onToggle: () => _toggleCorrect(index),
+                  onDelete: () => _removeOption(index),
                 );
               }),
             ] else

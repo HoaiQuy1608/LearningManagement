@@ -5,14 +5,93 @@ import 'package:learningmanagement/providers/quiz_history_provider.dart';
 import 'package:learningmanagement/screens/Student_screens/Quiz_screens/take_quiz_screen.dart';
 import 'package:learningmanagement/screens/Student_screens/Quiz_screens/create_quiz_screen.dart';
 import 'package:learningmanagement/screens/Student_screens/Quiz_screens/quiz_result_screen.dart';
+import 'package:learningmanagement/widgets/quizs/quiz_item_card.dart';
+import 'package:learningmanagement/models/quiz_attempt_model.dart';
+import 'package:learningmanagement/models/quiz_model.dart';
 
 class QuizListScreen extends ConsumerWidget {
   const QuizListScreen({super.key});
 
+  void _handleDoneQuizTap(
+    BuildContext context,
+    Quiz quiz,
+    List<QuizAttempt> attempts,
+  ) {
+    final latestAttempt = attempts.first;
+
+    final attemptsCount = attempts.length;
+
+    bool canRetake = false;
+    if (quiz.maxAttempt >= 99) {
+      canRetake = true;
+    } else {
+      canRetake = attemptsCount < quiz.maxAttempt;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(quiz.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Điểm số mới nhất: ${latestAttempt.score}'),
+            const SizedBox(height: 8),
+            Text(
+              'Số lần đã làm: $attemptsCount / ${quiz.maxAttempt >= 99 ? "∞" : quiz.maxAttempt}',
+              style: TextStyle(
+                color: canRetake ? Colors.black : Colors.red,
+                fontWeight: canRetake ? FontWeight.normal : FontWeight.bold,
+              ),
+            ),
+            if (!canRetake)
+              const Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                child: Text(
+                  'Bạn đã hết lượt làm bài!',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      QuizResultScreen(quiz: quiz, attempt: latestAttempt),
+                ),
+              );
+            },
+            child: const Text('Xem kết quả'),
+          ),
+
+          if (canRetake)
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => TakeQuizScreen(quiz: quiz)),
+                );
+              },
+              child: const Text('Làm lại'),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final quizState = ref.watch(quizProvider);
-
     final historyAsync = ref.watch(quizHistoryProvider);
 
     Widget bodyContent;
@@ -32,145 +111,26 @@ class QuizListScreen extends ConsumerWidget {
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final quiz = quizState.quizzes[index];
-              final attempt = historyMap[quiz.quizId];
-              final isDone = attempt != null;
-              return Card(
-                elevation: 3,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () {
-                    if (isDone) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              QuizResultScreen(quiz: quiz, attempt: attempt),
-                        ),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => TakeQuizScreen(quiz: quiz),
-                        ),
-                      );
-                    }
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: isDone
-                                    ? Colors.green[50]
-                                    : Colors.blue[50],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                isDone ? Icons.check_circle : Icons.school,
-                                color: isDone ? Colors.green : Colors.blue,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    quiz.title,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Text(
-                                    quiz.subject,
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (isDone)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green[100],
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  '${attempt.score}đ',
-                                  style: TextStyle(
-                                    color: Colors.green[800],
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              )
-                            else
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange[50],
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  '${quiz.timeLimit}p',
-                                  style: TextStyle(
-                                    color: Colors.orange[800],
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.help_outline,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${quiz.questions.length} câu hỏi',
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                            const Spacer(),
-                            Text(
-                              isDone ? 'Xem kết quả' : 'Làm bài ngay',
-                              style: TextStyle(
-                                color: isDone ? Colors.green : Colors.blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16,
-                              color: isDone ? Colors.green : Colors.blue,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+
+              final attemptsList = historyMap[quiz.quizId];
+              final isDone = (attemptsList != null && attemptsList.isNotEmpty);
+              final latestAttempt = isDone ? attemptsList.first : null;
+
+              return QuizItemCard(
+                quiz: quiz,
+                attempt: latestAttempt,
+                onTap: () {
+                  if (isDone) {
+                    _handleDoneQuizTap(context, quiz, attemptsList!);
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TakeQuizScreen(quiz: quiz),
+                      ),
+                    );
+                  }
+                },
               );
             },
           );

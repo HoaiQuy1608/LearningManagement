@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:learningmanagement/models/question_model.dart';
 import 'package:learningmanagement/providers/quiz_provider.dart';
+import 'package:learningmanagement/widgets/quizs/added_question_item.dart';
 import 'package:learningmanagement/screens/Student_screens/Quiz_screens/add_question_screen.dart';
 
 class CreateQuizScreen extends ConsumerStatefulWidget {
@@ -16,12 +17,14 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _timeLimitController = TextEditingController();
+  final _questionCountController = TextEditingController(text: '0');
+  final _maxAttemptController = TextEditingController(text: '3');
 
   String _selectedSubject = 'Lập trình';
   String _visibility = 'Public';
   bool _randomQuestions = false;
-  final bool _randomAnswers = false;
-  bool _allowRetake = true;
+  bool _randomAnswers = false;
+  bool _allowRetake = false;
 
   final List<Question> _questions = [];
   final List<String> _subjects = [
@@ -31,6 +34,15 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
     'Pháp luật',
     'Toán',
   ];
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _timeLimitController.dispose();
+    _questionCountController.dispose();
+    _maxAttemptController.dispose();
+    super.dispose();
+  }
 
   Future<void> _navigateToAddQuestion() async {
     final Question? newQuestion = await Navigator.push(
@@ -50,7 +62,11 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
       ).showSnackBar(const SnackBar(content: Text('Chưa có câu hỏi nào')));
       return;
     }
-
+    int finalMaxAttempt = 1;
+    if (_allowRetake) {
+      finalMaxAttempt = int.tryParse(_maxAttemptController.text) ?? 99;
+      if (finalMaxAttempt < 2) finalMaxAttempt = 99;
+    }
     await ref
         .read(quizProvider.notifier)
         .createQuiz(
@@ -64,7 +80,7 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
           randomQuestions: _randomQuestions,
           randomAnswers: _randomAnswers,
           showAnswer: true,
-          maxAttempt: 1,
+          maxAttempt: finalMaxAttempt,
         );
     if (mounted) {
       ScaffoldMessenger.of(
@@ -106,7 +122,7 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                         child: DropdownButtonFormField(
                           initialValue: _selectedSubject,
                           decoration: const InputDecoration(
-                            labelText: 'Mon hoc',
+                            labelText: 'Môn học',
                             border: OutlineInputBorder(),
                           ),
                           items: _subjects
@@ -160,11 +176,43 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                     onChanged: (v) => setState(() => _randomQuestions = v),
                   ),
                   SwitchListTile(
+                    title: const Text('Đảo đáp án'),
+                    value: _randomAnswers,
+                    onChanged: (v) => setState(() => _randomAnswers = v),
+                  ),
+                  SwitchListTile(
                     title: const Text('Cho phép làm lại'),
+                    subtitle: _allowRetake
+                        ? const Text('Sinh viên được làm bài nhiều lần')
+                        : const Text('Chỉ được làm 1 lần duy nhất'),
                     value: _allowRetake,
                     onChanged: (v) => setState(() => _allowRetake = v),
                   ),
-
+                  if (_allowRetake)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: TextFormField(
+                        controller: _maxAttemptController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Số lần tối đa',
+                          hintText: 'VD: 3',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.repeat),
+                          helperText: 'Nhập số lần làm bài',
+                        ),
+                        validator: (v) {
+                          if (!_allowRetake) return null;
+                          if (v == null || v.isEmpty)
+                            return 'Vui lòng nhập số lần';
+                          if (int.parse(v) < 2) return 'Phải lớn hơn 1';
+                          return null;
+                        },
+                      ),
+                    ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -198,24 +246,16 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                       separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final q = _questions[index];
-                        return Card(
-                          margin: EdgeInsets.zero,
-                          child: ListTile(
-                            leading: CircleAvatar(child: Text('${index + 1}')),
-                            title: Text(
-                              q.content,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            subtitle: Text(
-                              '${_getQuestionTypeVi(q.type.name)} • ${q.point}đ',
-                            ),
-                            trailing: IconButton(
-                              onPressed: () =>
-                                  setState(() => _questions.removeAt(index)),
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                            ),
-                          ),
+                        return AddedQuestionItem(
+                          index: index,
+                          question: q,
+                          onDelete: () {
+                            setState(() {
+                              _questions.removeAt(index);
+                              _questionCountController.text = _questions.length
+                                  .toString();
+                            });
+                          },
                         );
                       },
                     ),
@@ -257,12 +297,5 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
         ),
       ),
     );
-  }
-
-  String _getQuestionTypeVi(String type) {
-    if (type == 'multipleChoice') return 'Trắc nghiệm (1)';
-    if (type == 'multiSelect') return 'Trắc nghiệm (N)';
-    if (type == 'essay') return 'Tự luận';
-    return type;
   }
 }
