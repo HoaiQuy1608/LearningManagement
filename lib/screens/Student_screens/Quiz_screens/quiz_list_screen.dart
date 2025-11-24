@@ -18,8 +18,10 @@ class QuizListScreen extends ConsumerWidget {
     List<QuizAttempt> attempts,
   ) {
     final latestAttempt = attempts.first;
-
     final attemptsCount = attempts.length;
+    String maxAttemptLabel = (quiz.maxAttempt >= 99)
+        ? "Không giới hạn"
+        : "${quiz.maxAttempt}";
 
     bool canRetake = false;
     if (quiz.maxAttempt >= 99) {
@@ -38,13 +40,15 @@ class QuizListScreen extends ConsumerWidget {
           children: [
             Text('Điểm số mới nhất: ${latestAttempt.score}'),
             const SizedBox(height: 8),
+
             Text(
-              'Số lần đã làm: $attemptsCount / ${quiz.maxAttempt >= 99 ? "∞" : quiz.maxAttempt}',
+              'Số lần đã làm: $attemptsCount / $maxAttemptLabel',
               style: TextStyle(
                 color: canRetake ? Colors.black : Colors.red,
-                fontWeight: canRetake ? FontWeight.normal : FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
+
             if (!canRetake)
               const Padding(
                 padding: EdgeInsets.only(top: 8.0),
@@ -72,7 +76,6 @@ class QuizListScreen extends ConsumerWidget {
             },
             child: const Text('Xem kết quả'),
           ),
-
           if (canRetake)
             ElevatedButton(
               onPressed: () {
@@ -121,7 +124,7 @@ class QuizListScreen extends ConsumerWidget {
                 attempt: latestAttempt,
                 onTap: () {
                   if (isDone) {
-                    _handleDoneQuizTap(context, quiz, attemptsList!);
+                    _handleDoneQuizTap(context, quiz, attemptsList);
                   } else {
                     Navigator.push(
                       context,

@@ -64,8 +64,14 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
     }
     int finalMaxAttempt = 1;
     if (_allowRetake) {
-      finalMaxAttempt = int.tryParse(_maxAttemptController.text) ?? 99;
-      if (finalMaxAttempt < 2) finalMaxAttempt = 99;
+      final val = int.tryParse(_maxAttemptController.text);
+      if (val == null || val < 2) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Số lần làm lại phải lớn hơn 1')),
+        );
+        return;
+      }
+      finalMaxAttempt = val;
     }
     await ref
         .read(quizProvider.notifier)

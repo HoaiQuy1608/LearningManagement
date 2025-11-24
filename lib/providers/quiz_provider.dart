@@ -83,7 +83,6 @@ class QuizNotifier extends Notifier<QuizState> {
     try {
       final quizId = const Uuid().v4();
       String status = (visibility == 'public') ? 'pending_review' : 'approved';
-      final finalMaxAttempt = allowRetake ? 99 : maxAttempt;
       final newQuiz = Quiz(
         quizId: quizId,
         creatorId: currentUserId,
@@ -95,7 +94,7 @@ class QuizNotifier extends Notifier<QuizState> {
         visibility: visibility,
         status: status,
         timeLimit: timeLimit,
-        maxAttempt: finalMaxAttempt,
+        maxAttempt: maxAttempt,
         randomQuestions: randomQuestions,
         randomAnswers: randomAnswers,
         showAnswer: showAnswer,
