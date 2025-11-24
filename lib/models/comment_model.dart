@@ -2,6 +2,7 @@ class Comment {
   final String commentId;
   final String postId;
   final String userId;
+  final String? avatarUrl;
   final String authorName;
   final String content;
   final DateTime createdAt;
@@ -11,6 +12,7 @@ class Comment {
     required this.commentId,
     required this.postId,
     required this.userId,
+    this.avatarUrl,
     required this.authorName,
     required this.content,
     required this.createdAt,
@@ -21,6 +23,7 @@ class Comment {
     String? commentId,
     String? postId,
     String? userId,
+    String? avatarUrl,
     String? authorName,
     String? content,
     DateTime? createdAt,
@@ -31,6 +34,7 @@ class Comment {
       postId: postId ?? this.postId,
       userId: userId ?? this.userId,
       authorName: authorName ?? this.authorName,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       likes: likes ?? List<String>.from(this.likes),
@@ -44,6 +48,7 @@ class Comment {
         "postId": postId,
         "userId": userId,
         "authorName": authorName,
+        "avatarUrl" : avatarUrl,
         "content": content,
         "createdAt": createdAt.toIso8601String(),
         "likes": likes,
@@ -55,6 +60,7 @@ class Comment {
       postId: json["postId"],
       userId: json["userId"],
       authorName: json["authorName"] ?? "Người dùng",
+      avatarUrl: json["avatarUrl"],
       content: json["content"],
       createdAt: DateTime.parse(json["createdAt"]),
       likes: (json["likes"] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],

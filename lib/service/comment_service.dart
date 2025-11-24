@@ -10,12 +10,13 @@ class CommentService {
     final dbRef = _db.child(postId);
     await for (final event in dbRef.onValue) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
+
       if (data == null) {
         yield [];
         continue;
       }
 
-      // Lấy danh sách userId để truy xuất displayName
+      // Lấy danh sách userId để truy xuất displayName và avatarUrl
       final userIds = data.values
           .map((e) => (e as Map)['userId'] as String)
           .toSet()
@@ -23,23 +24,26 @@ class CommentService {
 
       final userSnapshots = await Future.wait(userIds.map((uid) async {
         final userSnap = await _userDb.child(uid).get();
-        final displayName =
-            (userSnap.value as Map?)?['displayName'] as String? ?? "Người dùng";
-        return MapEntry(uid, displayName);
+        final userMap = userSnap.value as Map?;
+        final displayName = userMap?['displayName'] as String? ?? "Người dùng";
+        final avatarUrl = userMap?['avatarUrl'] as String?;
+        return MapEntry(uid, {'displayName': displayName, 'avatarUrl': avatarUrl});
       }));
 
-      final userMap = Map<String, String>.fromEntries(userSnapshots);
+      final userMap = Map<String, Map<String, String?>>.fromEntries(userSnapshots);
 
       final comments = data.values.map((json) {
         final map = Map<String, dynamic>.from(json);
         final uid = map['userId'] as String;
+
         // Lấy danh sách likes
         final likesMap = (map['likes'] as Map<dynamic, dynamic>?) ?? {};
         final likes = likesMap.keys.cast<String>().toList();
 
         return Comment.fromJson({
           ...map,
-          'authorName': userMap[uid] ?? "Người dùng",
+          'authorName': userMap[uid]?['displayName'] ?? "Người dùng",
+          'avatarUrl': userMap[uid]?['avatarUrl'],
           'likes': likes,
         });
       }).toList();
@@ -51,9 +55,14 @@ class CommentService {
 
   // Thêm comment mới
   Future<void> addComment(Comment comment) async {
+    final userSnap = await _userDb.child(comment.userId).get();
+    final userMap = userSnap.value as Map?;
+    final avatarUrl = userMap?['avatarUrl'] as String?;
+
     final newRef = _db.child(comment.postId).push();
     final commentId = newRef.key!;
-    final commentWithId = comment.copyWith(commentId: commentId);
+    final commentWithId = comment.copyWith(commentId: commentId, avatarUrl: avatarUrl);
+
     await newRef.set(commentWithId.toJson());
   }
 

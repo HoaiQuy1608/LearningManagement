@@ -14,12 +14,12 @@ class PostHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final users = ref.watch(userProvider);
 
-    // Tìm user tương ứng với userId của post
     final user = users.firstWhere(
       (u) => u.uid == post.userId,
       orElse: () => UserModel(
         uid: post.userId,
         displayName: "Người dùng",
+        avatarUrl: null,
         email: "",
         role: UserRole.sinhVien,
         createdAt: DateTime.now(),
@@ -30,7 +30,16 @@ class PostHeader extends ConsumerWidget {
 
     return ListTile(
       leading: CircleAvatar(
-        child: Text(user.displayName ?? ""),
+        backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+        backgroundColor: Colors.blue,
+        child: user.avatarUrl == null
+            ? Text(
+                (user.displayName != null && user.displayName!.isNotEmpty)
+                    ? user.displayName![0].toUpperCase()
+                    : "U",
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              )
+            : null,
       ),
       title: Text(user.displayName ?? ""),
       subtitle: Text(

@@ -79,8 +79,16 @@ class _CommentHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        child: Text(comment.authorName.isNotEmpty ? comment.authorName[0] : "U"),
+        backgroundImage: comment.avatarUrl != null ? NetworkImage(comment.avatarUrl!) : null,
+        backgroundColor: Colors.blue,
+        child: comment.avatarUrl == null
+            ? Text(
+                (comment.authorName.isNotEmpty ? comment.authorName[0] : "U").toUpperCase(),
+                style: const TextStyle(color: Colors.white),
+              )
+            : null,
       ),
+
       title: Text(comment.authorName, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(
         _formatDate(comment.createdAt),
