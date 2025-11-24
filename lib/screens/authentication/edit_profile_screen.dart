@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:learningmanagement/models/user_model.dart';
+import 'package:learningmanagement/service/clouddinary_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final UserModel user;
@@ -12,9 +15,14 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final cloudinaryService = CloudinaryService();
+
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
+
+  File? _selectedImage;
+  bool _isUploadingImage = false;
   bool _isLoading = false;
 
   @override
@@ -25,42 +33,57 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _phoneController = TextEditingController(text: widget.user.phoneNumber);
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    super.dispose();
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+
+    if (picked != null) {
+      setState(() {
+        _selectedImage = File(picked.path);
+      });
+
+      await _uploadAvatar(_selectedImage!);
+    }
+  }
+
+  Future<void> _uploadAvatar(File file) async {
+    setState(() => _isUploadingImage = true);
+
+    final url = await cloudinaryService.uploadImage(file);
+
+    if (url != null) {
+      final dbRef = FirebaseDatabase.instance.ref('users/${widget.user.uid}');
+      await dbRef.update({'avatarUrl': url});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Cập nhật ảnh đại diện thành công")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Upload ảnh thất bại")),
+      );
+    }
+
+    setState(() => _isUploadingImage = false);
   }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
-    try {
-      final dbRef = FirebaseDatabase.instance.ref('users/${widget.user.uid}');
 
-      await dbRef.update({
-        'displayName': _nameController.text,
-        'email': _emailController.text,
-        'phoneNumber': _phoneController.text,
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cập nhật hồ sơ thành công')),
-        );
-        Navigator.pop(context, true);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+    setState(() => _isLoading = true);
+
+    final dbRef = FirebaseDatabase.instance.ref('users/${widget.user.uid}');
+    await dbRef.update({
+      'displayName': _nameController.text,
+      'email': _emailController.text,
+      'phoneNumber': _phoneController.text,
+    });
+
+    if (mounted) {
+      Navigator.pop(context, true);
     }
+
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -73,8 +96,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // Avatar and other fields can be added here
+              // ---- Avatar ----
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 55,
+                    backgroundImage: _selectedImage != null
+                        ? FileImage(_selectedImage!)
+                        : (widget.user.avatarUrl != null
+                            ? NetworkImage(widget.user.avatarUrl!)
+                            : null) as ImageProvider?,
+                    child: widget.user.avatarUrl == null && _selectedImage == null
+                        ? const Icon(Icons.person, size: 50)
+                        : null,
+                  ),
+                  if (_isUploadingImage)
+                    const CircularProgressIndicator(),
+                ],
+              ),
+
+              TextButton.icon(
+                onPressed: _isUploadingImage ? null : _pickImage,
+                icon: const Icon(Icons.camera_alt),
+                label: const Text("Đổi ảnh đại diện"),
+              ),
+
               const SizedBox(height: 24.0),
+
+              // ---- Name ----
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
@@ -84,7 +134,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 validator: (v) => v!.isEmpty ? 'Vui lòng nhập họ và tên' : null,
               ),
+
               const SizedBox(height: 16.0),
+
+              // ---- Email ----
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -92,10 +145,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
                 ),
-                validator: (v) =>
-                    v!.isEmpty ? 'Vui lòng nhập địa chỉ email' : null,
+                validator: (v) => v!.isEmpty ? 'Vui lòng nhập email' : null,
               ),
+
               const SizedBox(height: 16.0),
+
+              // ---- Phone ----
               TextFormField(
                 controller: _phoneController,
                 decoration: const InputDecoration(
@@ -103,22 +158,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.phone),
                 ),
-                keyboardType: TextInputType.phone,
               ),
-              if (widget.user.studentId != null) ...[
-                const SizedBox(height: 16.0),
-                TextFormField(
-                  initialValue: widget.user.studentId,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Mã sinh viên',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.badge),
-                    filled: true,
-                  ),
-                ),
-              ],
+
               const SizedBox(height: 32.0),
+
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -126,10 +169,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onPressed: _isLoading ? null : _saveProfile,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Lưu thay đổi',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                      : const Text('Lưu thay đổi'),
                 ),
               ),
             ],

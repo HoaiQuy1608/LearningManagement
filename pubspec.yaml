@@ -7,6 +7,7 @@ environment:
   sdk: ^3.9.2
 
 dependencies:
+  cloudinary_public: ^0.23.1
   device_info_plus: ^12.2.0
   firebase_auth: ^6.1.2
   firebase_core: ^4.2.1
@@ -15,6 +16,8 @@ dependencies:
     sdk: flutter
   flutter_local_notifications: ^19.5.0
   flutter_riverpod: ^3.0.3
+  http: ^1.6.0
+  image_picker: ^1.2.1
   permission_handler: ^12.0.1
   table_calendar: ^3.2.0
   timezone: ^0.10.1
