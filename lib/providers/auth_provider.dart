@@ -13,7 +13,7 @@ class AuthState {
   final bool isAuthenticated;
   final UserRole? userRole;
   final String? userId;
-  final String? displayName; 
+  final String? displayName;
 
   const AuthState({
     this.isLoading = false,
@@ -221,7 +221,7 @@ class AuthProvider extends Notifier<AuthState> {
     final newUser = UserModel(
       uid: uid,
       email: email,
-      role: UserRole.sinhVien,
+      role: UserRole.giangVien,
       displayName: name,
       studentId: studentId,
       phoneNumber: phoneNumber,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
+import 'package:learningmanagement/screens/Teacher_screens/class_list_screen.dart';
 
 class TeacherNav extends StatefulWidget {
   const TeacherNav({super.key});
@@ -14,7 +15,7 @@ class _TeacherNavState extends State<TeacherNav> {
 
   final screens = [
     const ForumScreen(),
-    //const ClassListScreen(),
+    const ClassListScreen(),
     const ProfileScreen(),
   ];
 
