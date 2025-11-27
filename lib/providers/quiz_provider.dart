@@ -52,7 +52,9 @@ class QuizNotifier extends Notifier<QuizState> {
           final quizMap = Map<String, dynamic>.from(value);
           final quiz = Quiz.fromJson(quizMap);
 
-          if (quiz.creatorId == _userId || quiz.status == 'approved') {
+          if (quiz.creatorId == _userId ||
+              quiz.status == 'approved' ||
+              (quiz.classId != null && quiz.classId!.isNotEmpty)) {
             loadedQuizzes.add(quiz);
           }
         } catch (e) {
@@ -64,7 +66,7 @@ class QuizNotifier extends Notifier<QuizState> {
     });
   }
 
-  Future<void> createQuiz({
+  Future<String?> createQuiz({
     required String title,
     required String description,
     required String subject,
@@ -78,7 +80,7 @@ class QuizNotifier extends Notifier<QuizState> {
     required List<Question> questions,
   }) async {
     final currentUserId = ref.read(authProvider).userId;
-    if (currentUserId == null) return;
+    if (currentUserId == null) return 'Người dùng chưa đăng nhập';
     state = state.copyWith(isLoading: true);
     try {
       final quizId = const Uuid().v4();
@@ -104,11 +106,21 @@ class QuizNotifier extends Notifier<QuizState> {
 
       await _db.child('quizzes').child(quizId).set(newQuiz.toJson());
       print('Đã tạo quiz thành công: $quizId');
+      return null;
     } catch (e) {
       print('Lỗi tạo quiz: $e');
+      return 'Lỗi tạo quiz: $e';
     } finally {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  Future<void> assignQuizToClass(String quizId, String classId) async {
+    await _db.child('quizzes').child(quizId).update({
+      'classId': classId,
+      'visibility': 'Class',
+      'status': 'approved',
+    });
   }
 }
 
