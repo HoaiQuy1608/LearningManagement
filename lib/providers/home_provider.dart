@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:learningmanagement/screens/Student_screens/scheduler/add_event_screen.dart';
-import 'package:learningmanagement/screens/Student_screens/documents/upload_document_screen.dart';
-import 'package:learningmanagement/screens/Student_screens/Quiz_screens/create_quiz_screen.dart';
+import 'package:learningmanagement/screens/scheduler/add_event_screen.dart';
+import 'package:learningmanagement/screens/documents/upload_document_screen.dart';
+import 'package:learningmanagement/screens/Quiz_screens/create_quiz_screen.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
 import 'package:learningmanagement/screens/forum_screens/create_post_screen.dart';
 

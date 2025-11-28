@@ -5,7 +5,7 @@ import 'package:learningmanagement/providers/auth_provider.dart';
 class UserDetailPanel extends StatefulWidget {
   final UserModel user;
   final void Function(UserRole newRole) onChangeRole;
-  final VoidCallback onToggleActive; // parent will wrap uid -> call provider
+  final VoidCallback onToggleActive; 
   final VoidCallback onResetPassword;
   final VoidCallback onDeleteUser;
 
@@ -97,7 +97,6 @@ class _UserDetailPanelState extends State<UserDetailPanel> {
 
             const SizedBox(height: 18),
 
-            // Active toggle + actions
             Row(
               children: [
                 Expanded(
@@ -116,7 +115,6 @@ class _UserDetailPanelState extends State<UserDetailPanel> {
 
             const SizedBox(height: 12),
 
-            // Actions
             Row(
               children: [
                 ElevatedButton.icon(
@@ -141,7 +139,6 @@ class _UserDetailPanelState extends State<UserDetailPanel> {
             const Divider(),
             const SizedBox(height: 12),
 
-            // Personal info
             const Text("Thông tin cá nhân", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             _infoRow("Số điện thoại", user.phoneNumber),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
+import 'package:learningmanagement/screens/Admin_screens/admin_main_screen.dart';
+import 'package:learningmanagement/screens/Home_screens/moderator_screen.dart';
 import 'package:learningmanagement/screens/Home_screens/student_screen.dart';
 import 'package:learningmanagement/screens/Home_screens/teacher_screen.dart';
 
@@ -20,14 +22,10 @@ class HomeScreen extends ConsumerWidget {
         return const TeacherNav();
 
       case UserRole.kiemDuyet:
-        return const Scaffold(
-          body: Center(child: Text("Màn hình Kiểm duyệt (Đang phát triển)")),
-        );
+        return const ModeratorNav();
 
       case UserRole.admin:
-        return const Scaffold(
-          body: Center(child: Text("Màn hình Admin (Đang phát triển)")),
-        );
+        return const AdminMainScreen();
 
       case UserRole.troGiang:
         return const TeacherNav();

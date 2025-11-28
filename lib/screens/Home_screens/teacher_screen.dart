@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
+import 'package:learningmanagement/screens/documents/upload_document_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
 import 'package:learningmanagement/screens/Teacher_screens/class_list_screen.dart';
 
@@ -17,19 +18,37 @@ class _TeacherNavState extends State<TeacherNav> {
     const ForumScreen(),
     const ClassListScreen(),
     const ProfileScreen(),
+    const UploadDocumentScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: screens[index],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: index,
-        onTap: (i) => setState(() => index = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: "Forum"),
-          BottomNavigationBarItem(icon: Icon(Icons.class_), label: "Lớp học"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: index,
+        onDestinationSelected: (i) => setState(() => index = i),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.forum_outlined),
+            selectedIcon: Icon(Icons.forum),
+            label: "Forum",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.quiz_outlined),
+            selectedIcon: Icon(Icons.quiz),
+            label: "Class",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: "Profile",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.document_scanner),
+            label: "Document",
+          ),
         ],
       ),
     );

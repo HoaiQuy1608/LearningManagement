@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:learningmanagement/models/question_model.dart';
 import 'package:learningmanagement/providers/quiz_provider.dart';
 import 'package:learningmanagement/widgets/quizs/added_question_item.dart';
-import 'package:learningmanagement/screens/Student_screens/Quiz_screens/add_question_screen.dart';
+import 'package:learningmanagement/screens/Quiz_screens/add_question_screen.dart';
 
 class CreateQuizScreen extends ConsumerStatefulWidget {
   const CreateQuizScreen({super.key});

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
+import 'package:learningmanagement/screens/documents/document_pending.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
 
 class ModeratorNav extends StatefulWidget {
@@ -14,7 +15,7 @@ class _ModeratorNavState extends State<ModeratorNav> {
 
   final screens = [
     const ForumScreen(),
-    //const ManagePostsScreen(),
+    const PendingDocumentScreen(),
     const ProfileScreen(),
   ];
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:learningmanagement/models/user_model.dart';
-import 'package:learningmanagement/screens/Admin_screens/UserManagement/widgets/user_list_item.dart';
-import 'package:learningmanagement/screens/Admin_screens/UserManagement/widgets/search_filter_bar.dart';
+import 'package:learningmanagement/widgets/user_management/user_list_item.dart';
+import 'package:learningmanagement/widgets/user_management/search_filter_bar.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
 
 class UserList extends StatelessWidget {

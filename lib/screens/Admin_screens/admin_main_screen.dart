@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:learningmanagement/models/user_model.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
 import 'package:learningmanagement/providers/user_provider.dart';
 import 'package:learningmanagement/screens/Admin_screens/UserManagement/user_management.dart';
+import 'package:learningmanagement/screens/authentication/profile_screen.dart';
 import 'admin_home.dart';
 
 class AdminMainScreen extends ConsumerStatefulWidget {
@@ -45,6 +45,7 @@ class _AdminMainScreenState extends ConsumerState<AdminMainScreen> {
         onDeleteUser: _onDeleteUser,
         onChangeRole: _onChangeRole,
       ),
+      const ProfileScreen(),
     ];
 
     return Scaffold(
@@ -61,6 +62,7 @@ class _AdminMainScreenState extends ConsumerState<AdminMainScreen> {
             icon: Icon(Icons.people),
             label: 'Người dùng',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );

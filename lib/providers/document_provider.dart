@@ -1,101 +1,78 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:learningmanagement/service/clouddinary_service.dart';
+import '../models/document_model.dart';
+import 'auth_provider.dart';
 
-@immutable
-class Documents {
-  final String title;
-  final String description;
-  final String subject;
-  final String accessLevel;
-  final String author;
-  final double rating;
-  final int downloads;
-  final String? coverImageName;
+final cloudinaryProvider = Provider<CloudinaryService>((ref) => CloudinaryService());
 
-  const Documents({
-    required this.title,
-    required this.description,
-    required this.subject,
-    required this.accessLevel,
-    required this.author,
-    required this.rating,
-    required this.downloads,
-    this.coverImageName,
-  });
-}
+final documentUploadProvider =
+    StateNotifierProvider<DocumentUploadController, AsyncValue<void>>((ref) {
+  return DocumentUploadController(ref);
+});
 
-@immutable
-class DocumentState {
-  final List<Documents> documents;
-  final bool isLoading;
+class DocumentUploadController extends StateNotifier<AsyncValue<void>> {
+  final Ref ref;
+  DocumentUploadController(this.ref) : super(const AsyncValue.data(null));
 
-  const DocumentState({this.documents = const [], this.isLoading = false});
-
-  DocumentState copyWith({List<Documents>? documents, bool? isLoading}) {
-    return DocumentState(
-      documents: documents ?? this.documents,
-      isLoading: isLoading ?? this.isLoading,
-    );
-  }
-}
-
-class DocumentProvider extends Notifier<DocumentState> {
-  @override
-  DocumentState build() {
-    return const DocumentState(
-      documents: [
-        Documents(
-          title: 'Bài giảng Flutter',
-          author: 'GV. A',
-          rating: 4.5,
-          downloads: 150,
-          description: '...',
-          subject: 'Flutter',
-          accessLevel: 'Public',
-        ),
-        Documents(
-          title: 'Giáo trình Kinh tế chính trị',
-          author: 'GV. B',
-          rating: 4.8,
-          downloads: 500,
-          description: '...',
-          subject: 'Kinh tế chính trị',
-          accessLevel: 'Class',
-        ),
-      ],
-    );
-  }
+  final dbRef = FirebaseDatabase.instance.ref("documents");
 
   Future<void> uploadDocument({
+    required File file,
     required String title,
     required String description,
     required String subject,
-    required String accessLevel,
-    required String author,
-    required double rating,
-    required int downloads,
-    required String fileName,
-    String? coverImageName,
+    List<String> tags = const [],
+    String visibility = "public",
   }) async {
-    state = state.copyWith(isLoading: true);
-    await Future.delayed(const Duration(seconds: 2));
-    final newDocument = Documents(
-      title: title,
-      description: description,
-      subject: subject,
-      accessLevel: accessLevel,
-      author: author,
-      rating: rating,
-      downloads: downloads,
-      coverImageName: coverImageName,
-    );
-    state = state.copyWith(
-      isLoading: false,
-      documents: [...state.documents, newDocument],
-    );
+    state = const AsyncValue.loading();
+
+    try {
+      final authState = ref.read(authProvider);
+      final userId = authState.userId;
+      final role = authState.userRole;
+
+      if (userId == null) throw "Vui lòng đăng nhập để upload.";
+
+      final cloudinary = ref.read(cloudinaryProvider);
+
+      // Upload tài liệu vào preset documents
+      final fileUrl = await cloudinary.uploadDocument(file);
+      if (fileUrl == null) throw "Lỗi upload file.";
+
+      // Dùng chính file PDF/Word làm preview
+      final filePreviewUrl = fileUrl;
+
+      final status = (role == 'teacher' || role == 'admin') ? 'approved' : 'pending';
+
+      final newDocRef = dbRef.push();
+      final docId = newDocRef.key!;
+
+      final document = DocumentModel(
+        docId: docId,
+        uploaderId: userId,
+        title: title,
+        description: description,
+        subject: subject,
+        tags: tags,
+        fileOriginalUrl: fileUrl,
+        filePreviewUrl: filePreviewUrl,
+        visibility: visibility,
+        status: status,
+        downloadCount: 0,
+        createdAt: DateTime.now(),
+      );
+
+      await newDocRef.set({
+        ...document.toJson(),
+        "createdAt": ServerValue.timestamp,
+      });
+
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 }
-
-final documentProvider = NotifierProvider<DocumentProvider, DocumentState>(() {
-  return DocumentProvider();
-});

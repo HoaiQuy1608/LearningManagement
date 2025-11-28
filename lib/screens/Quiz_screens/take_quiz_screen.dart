@@ -5,7 +5,7 @@ import 'package:learningmanagement/models/quiz_model.dart';
 import 'package:learningmanagement/models/question_model.dart';
 import 'package:learningmanagement/providers/quiz_attempt_provider.dart';
 import 'package:learningmanagement/widgets/quizs/answer_option_tile.dart';
-import 'package:learningmanagement/screens/Student_screens/Quiz_screens/quiz_result_screen.dart';
+import 'package:learningmanagement/screens/Quiz_screens/quiz_result_screen.dart';
 
 class TakeQuizScreen extends ConsumerStatefulWidget {
   final Quiz quiz;
