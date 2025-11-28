@@ -19,11 +19,8 @@ dependencies:
   flutter_riverpod: ^3.0.3
   http: ^1.6.0
   image_picker: ^1.2.1
-<<<<<<< HEAD
-  path_provider: ^2.1.5
-=======
   intl: ^0.20.2
->>>>>>> c5c5cd291978ae8aa342f2615f0bd5e8a663fb0e
+  path_provider: ^2.1.5
   permission_handler: ^12.0.1
   syncfusion_flutter_pdfviewer: ^31.2.15
   table_calendar: ^3.2.0

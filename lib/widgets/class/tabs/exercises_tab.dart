@@ -3,15 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/quiz_provider.dart';
 import 'package:learningmanagement/providers/quiz_history_provider.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
-<<<<<<< HEAD
 import 'package:learningmanagement/screens/Quiz_screens/quiz_result_screen.dart';
 import 'package:learningmanagement/screens/Quiz_screens/take_quiz_screen.dart';
-=======
-import 'package:learningmanagement/screens/Student_screens/Quiz_screens/take_quiz_screen.dart';
-import 'package:learningmanagement/screens/Student_screens/Quiz_screens/quiz_result_screen.dart';
-import 'package:learningmanagement/screens/class/quiz_submissions_screen.dart';
->>>>>>> c5c5cd291978ae8aa342f2615f0bd5e8a663fb0e
 import 'package:learningmanagement/widgets/quizs/quiz_item_card.dart';
+import 'package:learningmanagement/screens/class/quiz_submissions_screen.dart';
 
 class ExercisesTab extends ConsumerWidget {
   final String classId;
