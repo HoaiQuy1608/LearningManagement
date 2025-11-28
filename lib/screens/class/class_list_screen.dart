@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/providers/class_provider.dart';
-import 'package:learningmanagement/screens/Teacher_screens/create_class_screen.dart';
+import 'package:learningmanagement/screens/class/create_class_screen.dart';
+import 'package:learningmanagement/screens/class/class_detail_screen.dart';
 import 'package:learningmanagement/widgets/class/class_item_card.dart';
 
 class ClassListScreen extends ConsumerWidget {
@@ -54,7 +55,13 @@ class ClassListScreen extends ConsumerWidget {
                 return ClassItemCard(
                   classModel: classModel,
                   onTap: () {
-                    print("Bấm vào lớp: ${classModel.className}");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ClassDetailScreen(classModel: classModel),
+                      ),
+                    );
                   },
                 );
               },

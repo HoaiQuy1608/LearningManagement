@@ -221,7 +221,7 @@ class AuthProvider extends Notifier<AuthState> {
     final newUser = UserModel(
       uid: uid,
       email: email,
-      role: UserRole.giangVien,
+      role: UserRole.sinhVien,
       displayName: name,
       studentId: studentId,
       phoneNumber: phoneNumber,

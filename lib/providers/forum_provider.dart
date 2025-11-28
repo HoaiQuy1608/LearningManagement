@@ -4,8 +4,8 @@ import 'package:learningmanagement/models/forum_post_model.dart';
 
 final forumPostProvider =
     StateNotifierProvider<ForumPostNotifier, List<ForumPost>>(
-  (ref) => ForumPostNotifier(),
-);
+      (ref) => ForumPostNotifier(),
+    );
 
 class ForumPostNotifier extends StateNotifier<List<ForumPost>> {
   ForumPostNotifier() : super([]) {

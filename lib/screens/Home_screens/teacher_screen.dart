@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:learningmanagement/screens/Quiz_screens/quiz_list_screen.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
 import 'package:learningmanagement/screens/documents/upload_document_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
-import 'package:learningmanagement/screens/Teacher_screens/class_list_screen.dart';
+import 'package:learningmanagement/screens/class/class_list_screen.dart';
 
 class TeacherNav extends StatefulWidget {
   const TeacherNav({super.key});
@@ -17,6 +18,7 @@ class _TeacherNavState extends State<TeacherNav> {
   final screens = [
     const ForumScreen(),
     const ClassListScreen(),
+    const QuizListScreen(),
     const ProfileScreen(),
     const UploadDocumentScreen(),
   ];
@@ -49,6 +51,7 @@ class _TeacherNavState extends State<TeacherNav> {
             selectedIcon: Icon(Icons.document_scanner),
             label: "Document",
           ),
+
         ],
       ),
     );

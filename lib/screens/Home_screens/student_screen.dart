@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:learningmanagement/screens/Quiz_screens/quiz_list_screen.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
+import 'package:learningmanagement/screens/class/join_class_screen.dart';
 import 'package:learningmanagement/screens/documents/upload_document_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
-import 'package:learningmanagement/screens/Quiz_screens/quiz_list_screen.dart';
+import 'package:learningmanagement/screens/scheduler/scheduler_screen.dart';
+
+
 
 class StudentNav extends StatefulWidget {
   const StudentNav({super.key});
@@ -15,8 +19,10 @@ class _StudentNavState extends State<StudentNav> {
   int index = 0;
 
   final screens = [
+    const SchedulerScreen(),
     const ForumScreen(),
     const QuizListScreen(),
+    const JoinClassScreen(),
     const ProfileScreen(),
     const UploadDocumentScreen(),
   ];
@@ -29,6 +35,11 @@ class _StudentNavState extends State<StudentNav> {
         selectedIndex: index,
         onDestinationSelected: (i) => setState(() => index = i),
         destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.forum_outlined),
+            selectedIcon: Icon(Icons.schedule),
+            label: "Schedule",
+          ),
           NavigationDestination(
             icon: Icon(Icons.forum_outlined),
             selectedIcon: Icon(Icons.forum),
