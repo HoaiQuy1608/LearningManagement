@@ -5,6 +5,7 @@ import 'package:learningmanagement/providers/quiz_history_provider.dart';
 import 'package:learningmanagement/providers/auth_provider.dart';
 import 'package:learningmanagement/screens/Student_screens/Quiz_screens/take_quiz_screen.dart';
 import 'package:learningmanagement/screens/Student_screens/Quiz_screens/quiz_result_screen.dart';
+import 'package:learningmanagement/screens/class/quiz_submissions_screen.dart';
 import 'package:learningmanagement/widgets/quizs/quiz_item_card.dart';
 
 class ExercisesTab extends ConsumerWidget {
@@ -45,7 +46,7 @@ class ExercisesTab extends ConsumerWidget {
                 child: availableQuizzes.isEmpty
                     ? const Center(
                         child: Text(
-                          'Bạn không còn bài quiz nào trống.\nHãy tạo thêm quiz mới ở ngoài trang chủ.',
+                          'Không còn bài quiz nào trống.\nHãy tạo thêm quiz mới ở ngoài trang chủ.',
                         ),
                       )
                     : ListView.separated(
@@ -153,11 +154,10 @@ class ExercisesTab extends ConsumerWidget {
                 attempt: latestAttempt,
                 onTap: () {
                   if (isTeacher) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Chức năng xem thống kê lớp đang phát triển',
-                        ),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => QuizSubmissionsScreen(quiz: quiz),
                       ),
                     );
                   } else {
