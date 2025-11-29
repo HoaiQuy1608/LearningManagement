@@ -27,7 +27,7 @@ class _ModeratorNavState extends State<ModeratorNav> {
         currentIndex: index,
         onTap: (i) => setState(() => index = i),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: "Forum"),
+          BottomNavigationBarItem(icon: Icon(Icons.forum), label: "Diễn đàn"),
           BottomNavigationBarItem(icon: Icon(Icons.admin_panel_settings), label: "Quản lý"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],

@@ -6,7 +6,7 @@ class Comment {
   final String authorName;
   final String content;
   final DateTime createdAt;
-  final List<String> likes; // danh sách userId đã like
+  final List<String> likes; 
 
   Comment({
     required this.commentId,

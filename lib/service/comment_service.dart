@@ -1,11 +1,11 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:learningmanagement/models/reply_model.dart';
 import '../models/comment_model.dart';
 
 class CommentService {
   final DatabaseReference _db = FirebaseDatabase.instance.ref("comments");
   final DatabaseReference _userDb = FirebaseDatabase.instance.ref("users");
 
-  // Stream realtime comment
   Stream<List<Comment>> commentStream(String postId) async* {
     final dbRef = _db.child(postId);
     await for (final event in dbRef.onValue) {
@@ -16,7 +16,6 @@ class CommentService {
         continue;
       }
 
-      // Lấy danh sách userId để truy xuất displayName và avatarUrl
       final userIds = data.values
           .map((e) => (e as Map)['userId'] as String)
           .toSet()
@@ -66,7 +65,6 @@ class CommentService {
     await newRef.set(commentWithId.toJson());
   }
 
-  // Toggle like/unlike
   Future<void> toggleLikeComment(
       String postId, String commentId, String userId) async {
     final likeRef = _db.child(postId).child(commentId).child('likes');
@@ -75,6 +73,72 @@ class CommentService {
     final likes = snapshot.value as Map<dynamic, dynamic>? ?? {};
 
     if (likes.containsKey(userId)) {
+      await likeRef.child(userId).remove();
+    } else {
+      await likeRef.child(userId).set(true);
+    }
+  }
+
+  Stream<List<Reply>> replyStream(String postId, String commentId) async* {
+    final ref = _db.child(postId).child(commentId).child('replies');
+
+    await for (final event in ref.onValue) {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+
+      if (data == null) {
+        yield [];
+        continue;
+      }
+
+      final userIds = data.values
+          .map((e) => (e as Map)['userId'] as String)
+          .toSet()
+          .toList();
+
+      final userSnapshots = await Future.wait(userIds.map((uid) async {
+        final userSnap = await _userDb.child(uid).get();
+        final userMap = userSnap.value as Map?;
+        final displayName = userMap?['displayName'] as String? ?? "Người dùng";
+        final avatarUrl = userMap?['avatarUrl'] as String?;
+        return MapEntry(uid, {'displayName': displayName, 'avatarUrl': avatarUrl});
+      }));
+
+      final userMap = Map<String, Map<String, String?>>.fromEntries(userSnapshots);
+
+      final replies = data.values.map((json) {
+        final map = Map<String, dynamic>.from(json);
+        final uid = map['userId'] as String;
+
+        final likesMap = (map['likes'] as Map<dynamic, dynamic>?) ?? {};
+        final likes = likesMap.keys.cast<String>().toList();
+
+        return Reply.fromJson({
+          ...map,
+          'authorName': userMap[uid]?['displayName'] ?? "Người dùng",
+          'avatarUrl': userMap[uid]?['avatarUrl'],
+          'likes': likes,
+        });
+      }).toList();
+
+      replies.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      yield replies;
+    }
+  }
+
+  // Thêm reply
+  Future<void> addReply(String postId, String commentId, Reply reply) async {
+    final replyRef = _db.child(postId).child(commentId).child('replies').push();
+    final replyId = replyRef.key!;
+    final replyWithId = reply.copyWith(replyId: replyId);
+    await replyRef.set(replyWithId.toJson());
+  }
+
+  Future<void> toggleLikeReply(String postId, String commentId, String replyId, String userId) async {
+    final likeRef = _db.child(postId).child(commentId).child('replies').child(replyId).child('likes');
+    final snapshot = await likeRef.get();
+    final likes = snapshot.value as Map<dynamic,dynamic>? ?? {};
+
+    if(likes.containsKey(userId)) {
       await likeRef.child(userId).remove();
     } else {
       await likeRef.child(userId).set(true);

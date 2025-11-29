@@ -14,7 +14,7 @@ class PendingDocumentScreen extends ConsumerWidget {
     final pendingDocsAsync = ref.watch(pendingDocumentsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Pending Documents")),
+      appBar: AppBar(title: const Text("Tài liệu đang chờ duyệt")),
       body: pendingDocsAsync.when(
         data: (docs) {
           if (docs.isEmpty) return const Center(child: Text("Không có tài liệu chờ duyệt"));
@@ -48,7 +48,7 @@ class _DocumentCard extends ConsumerWidget {
         if (snapshot.hasData && snapshot.data!.exists) {
           final raw = snapshot.data!.value as Map<Object?, Object?>;
           final userMap = raw.map((k, v) => MapEntry(k.toString(), v));
-          name = userMap['fullName']?.toString() ?? "Unknown";
+          name = userMap['displayName']?.toString() ?? "Unknown";
           avatar = userMap['avatarUrl']?.toString() ?? "";
         }
 
@@ -88,51 +88,67 @@ class _DocumentCard extends ConsumerWidget {
                 const SizedBox(height: 14),
 
                 // Buttons
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     TextButton.icon(
-                      icon: const Icon(Icons.remove_red_eye),
-                      label: const Text("Preview"),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        minimumSize: const Size(80, 36),
+                      ),
+                      icon: const Icon(Icons.remove_red_eye, size: 18),
+                      label: const Text(
+                        "Preview",
+                        style: TextStyle(fontSize: 14),
+                      ),
                       onPressed: () async {
-                          final url = doc.filePreviewUrl ?? '';
-                          if (url.isEmpty) return;
-                          final extension = url.split('.').last.toLowerCase(); 
-
-                          if (extension == 'pdf') {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PdfPreviewScreen(url: url),
-                              ),
-                            );
+                        final url = doc.filePreviewUrl ?? '';
+                        if (url.isEmpty) return;
+                        final extension = url.split('.').last.toLowerCase();
+                        if (extension == 'pdf') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PdfPreviewScreen(url: url),
+                            ),
+                          );
+                        } else {
+                          final uri = Uri.parse(url);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
                           } else {
-                            final uri = Uri.parse(url);
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Không thể mở file này")),
-                              );
-                            }
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(content: Text("Không thể mở file này")));
                           }
-                        },
+                        }
+                      },
                     ),
-                    const Spacer(),
+
                     OutlinedButton.icon(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      label: const Text("Reject", style: TextStyle(color: Colors.red)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        minimumSize: const Size(80, 36),
+                      ),
+                      icon: const Icon(Icons.close, color: Colors.red, size: 18),
+                      label: const Text("Reject",
+                          style: TextStyle(fontSize: 14, color: Colors.red)),
                       onPressed: () => _showRejectDialog(context, ref, doc),
                     ),
-                    const SizedBox(width: 12),
+
                     ElevatedButton.icon(
-                      icon: const Icon(Icons.check),
-                      label: const Text("Approve"),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        minimumSize: const Size(80, 36),
+                      ),
+                      icon: const Icon(Icons.check, size: 18),
+                      label: const Text("Approve", style: TextStyle(fontSize: 14)),
                       onPressed: () async {
                         await ref.read(documentActionProvider).approve(doc.docId);
                         ScaffoldMessenger.of(context)
                             .showSnackBar(const SnackBar(content: Text("Approved")));
                       },
-                    )
+                    ),
                   ],
                 )
               ],

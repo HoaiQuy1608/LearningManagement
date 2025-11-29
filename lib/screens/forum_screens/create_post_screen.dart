@@ -6,58 +6,93 @@ import 'package:learningmanagement/providers/forum_provider.dart';
 import 'package:uuid/uuid.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
+  final ForumPost? editPost; // Nếu khác null -> chỉnh sửa
+
+  const CreatePostScreen({this.editPost, super.key});
+
   @override
   ConsumerState<CreatePostScreen> createState() => _CreatePostScreenState();
 }
 
 class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
-  final titleCtrl = TextEditingController();
-  final contentCtrl = TextEditingController();
+  late TextEditingController titleCtrl;
+  late TextEditingController contentCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    titleCtrl = TextEditingController(text: widget.editPost?.title ?? "");
+    contentCtrl = TextEditingController(text: widget.editPost?.content ?? "");
+  }
+
+  @override
+  void dispose() {
+    titleCtrl.dispose();
+    contentCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Scaffold(
-      appBar: AppBar(title: Text("Tạo bài viết")),
+      appBar: AppBar(title: Text(widget.editPost != null ? "Chỉnh sửa bài viết" : "Tạo bài viết")),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
               controller: titleCtrl,
-              decoration: InputDecoration(labelText: "Tiêu đề"),
+              decoration: const InputDecoration(labelText: "Tiêu đề"),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             TextField(
               controller: contentCtrl,
               maxLines: 6,
-              decoration: InputDecoration(labelText: "Nội dung"),
+              decoration: const InputDecoration(labelText: "Nội dung"),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                final authState = ref.read(authProvider); // Lấy trạng thái đăng nhập hiện tại
                 if (authState.userId == null) {
-                  // Nếu chưa có userId, báo lỗi
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Lỗi: chưa đăng nhập")),
                   );
                   return;
                 }
 
-                final post = ForumPost(
-                  postId: Uuid().v4(),
-                  userId: authState.userId!, 
-                  classId: null,
-                  title: titleCtrl.text.trim(),
-                  content: contentCtrl.text.trim(),
-                  tags: [],
-                  createdAt: DateTime.now(),
-                );
+                final trimmedTitle = titleCtrl.text.trim();
+                final trimmedContent = contentCtrl.text.trim();
+                if (trimmedTitle.isEmpty || trimmedContent.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Vui lòng điền đầy đủ tiêu đề và nội dung")),
+                  );
+                  return;
+                }
 
-                ref.read(forumPostProvider.notifier).createPost(post);
+                if (widget.editPost != null) {
+                  final updatedPost = widget.editPost!.copyWith(
+                    title: trimmedTitle,
+                    content: trimmedContent,
+                  );
+                  ref.read(forumPostProvider.notifier).updatePost(updatedPost);
+                } else {
+                  final newPost = ForumPost(
+                    postId: const Uuid().v4(),
+                    userId: authState.userId!,
+                    classId: null,
+                    title: trimmedTitle,
+                    content: trimmedContent,
+                    tags: [],
+                    createdAt: DateTime.now(),
+                  );
+                  ref.read(forumPostProvider.notifier).createPost(newPost);
+                }
+
                 Navigator.pop(context);
               },
-              child: Text("Đăng bài"),
+              child: Text(widget.editPost != null ? "Cập nhật" : "Đăng bài"),
             )
           ],
         ),

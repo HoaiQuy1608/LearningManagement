@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:learningmanagement/service/comment_service.dart';
+import 'package:learningmanagement/widgets/forum/comment_footer.dart';
 import '../../models/comment_model.dart';
 import '../../providers/auth_provider.dart';
 
@@ -64,7 +65,7 @@ class _CommentTileState extends ConsumerState<CommentTile> {
             padding: const EdgeInsets.all(12),
             child: Text(comment.content),
           ),
-          _CommentFooter(comment: comment, isLiked: _isLiked(userId ?? ""), onLikeTap: _toggleLike),
+          CommentFooter(comment: comment, isLiked: _isLiked(userId ?? ""), onLikeTap: _toggleLike),
         ],
       ),
     );
@@ -106,35 +107,4 @@ class _CommentHeader extends StatelessWidget {
   }
 }
 
-class _CommentFooter extends StatelessWidget {
-  final Comment comment;
-  final bool isLiked;
-  final VoidCallback onLikeTap;
 
-  const _CommentFooter({required this.comment, required this.isLiked, required this.onLikeTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: onLikeTap,
-            child: Icon(
-              isLiked ? Icons.thumb_up_alt : Icons.thumb_up_alt_outlined,
-              size: 16,
-              color: isLiked ? Colors.blue : Colors.grey[600],
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text("${comment.likes.length}", style: TextStyle(color: Colors.grey[600])),
-          const SizedBox(width: 16),
-          Icon(Icons.reply_outlined, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 4),
-          Text("Trả lời", style: TextStyle(color: Colors.grey[600])),
-        ],
-      ),
-    );
-  }
-}
