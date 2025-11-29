@@ -4,9 +4,14 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:learningmanagement/providers/scheduler_provider.dart';
 import 'package:learningmanagement/screens/scheduler/event_detail_screen.dart';
 import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
+<<<<<<< HEAD
 import 'package:learningmanagement/screens/scheduler/student_stats_screen.dart';
 import 'package:learningmanagement/widgets/schedules/schedule_item_card.dart';
 
+=======
+import 'package:learningmanagement/widgets/schedules/schedule_item_card.dart';
+import 'package:learningmanagement/screens/scheduler/student_stats_screen.dart';
+>>>>>>> f24c01c5b11f1987c4a53bcf32a7f83d089ce3e0
 
 class SchedulerScreen extends ConsumerStatefulWidget {
   const SchedulerScreen({super.key});
