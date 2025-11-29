@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learningmanagement/screens/Quiz_screens/quiz_list_screen.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
 import 'package:learningmanagement/screens/class/join_class_screen.dart';
+import 'package:learningmanagement/screens/documents/document_list_screen.dart';
 import 'package:learningmanagement/screens/documents/upload_document_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
 import 'package:learningmanagement/screens/scheduler/scheduler_screen.dart';
@@ -24,7 +25,7 @@ class _StudentNavState extends State<StudentNav> {
     const QuizListScreen(),
     const JoinClassScreen(),
     const ProfileScreen(),
-    const UploadDocumentScreen(),
+    const DocumentListScreen(),
   ];
 
   @override
@@ -49,6 +50,11 @@ class _StudentNavState extends State<StudentNav> {
             icon: Icon(Icons.quiz_outlined),
             selectedIcon: Icon(Icons.quiz),
             label: "Quiz",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.class_),
+            label: "Class",
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

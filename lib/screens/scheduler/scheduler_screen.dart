@@ -2,18 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:learningmanagement/providers/scheduler_provider.dart';
-<<<<<<< HEAD:lib/screens/scheduler/scheduler_screen.dart
 import 'package:learningmanagement/screens/scheduler/event_detail_screen.dart';
-import 'package:learningmanagement/models/schedule_model.dart';
 import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
-import 'package:learningmanagement/widgets/schedules/countdown_timer.dart';
 import 'package:learningmanagement/screens/scheduler/student_stats_screen.dart';
-=======
-import 'package:learningmanagement/screens/Student_screens/scheduler/event_detail_screen.dart';
-import 'package:learningmanagement/providers/deadline_countdown_provider.dart';
 import 'package:learningmanagement/widgets/schedules/schedule_item_card.dart';
-import 'package:learningmanagement/screens/Student_screens/scheduler/student_stats_screen.dart';
->>>>>>> c5c5cd291978ae8aa342f2615f0bd5e8a663fb0e:lib/screens/Student_screens/scheduler/scheduler_screen.dart
+
 
 class SchedulerScreen extends ConsumerStatefulWidget {
   const SchedulerScreen({super.key});

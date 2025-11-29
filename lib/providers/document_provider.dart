@@ -45,7 +45,7 @@ class DocumentUploadController extends StateNotifier<AsyncValue<void>> {
       // Dùng chính file PDF/Word làm preview
       final filePreviewUrl = fileUrl;
 
-      final status = (role == 'teacher' || role == 'admin') ? 'approved' : 'pending';
+      final status = (role == UserRole.giangVien ) ? 'approved' : 'pending';
 
       final newDocRef = dbRef.push();
       final docId = newDocRef.key!;

@@ -74,6 +74,6 @@ class DocumentModel {
       'visibility': visibility,
       'status': status,
       'downloadCount': downloadCount,
-      'createdAt': createdAt.millisecondsSinceEpoch, // luôn int
+      'createdAt': createdAt.millisecondsSinceEpoch, 
     };
 }

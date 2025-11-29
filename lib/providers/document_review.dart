@@ -23,7 +23,6 @@ class DocumentReviewProvider {
         "type": "document_rejected",
       });
 
-      // 2. XÓA document khỏi Realtime DB
       await db.child(doc.docId).remove();
 
     } catch (e) {
