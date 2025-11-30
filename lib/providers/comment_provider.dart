@@ -41,13 +41,53 @@ class CommentNotifier extends StateNotifier<List<Comment>> {
     );
 
     await _service.addComment(comment);
-    // Không cần reload nữa, stream tự cập nhật
   }
+
+  Future<void> deleteComment(String commentId) async {
+    final authState = ref.read(authProvider);
+    if (authState.userId == null) return;
+
+    await _service.updateComment(
+      postId,
+      commentId,
+      {
+        "deleted": true,
+        "deletedAt": DateTime.now().toIso8601String(),
+      },
+    );
+  }
+
+  Future<void> editComment(String commentId, String newContent) async {
+    final authState = ref.read(authProvider);
+    if (authState.userId == null) return;
+
+    await _service.updateComment(
+      postId,
+      commentId,
+      {
+        "content": newContent,
+        "editedAt": DateTime.now().toIso8601String(),
+      },
+    );
+  }
+Future<void> reportComment(String commentId, String reason) async {
+  final authState = ref.read(authProvider);
+  if (authState.userId == null) return;
+
+  // Gọi service để lưu báo cáo
+  await _service.reportComment(
+    postId: postId,
+    commentId: commentId,
+    reportedByUserId: authState.userId!,
+    reason: reason,
+    reportedAt: DateTime.now(),
+  );
+}
+
 
   Future<void> toggleLike(String commentId) async {
     final authState = ref.read(authProvider);
     if (authState.userId == null) return;
     await _service.toggleLikeComment(postId, commentId, authState.userId!);
-    // Stream sẽ tự cập nhật state mới
   }
 }

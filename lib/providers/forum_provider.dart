@@ -14,7 +14,7 @@ class ForumPostNotifier extends StateNotifier<List<ForumPost>> {
 
   final _db = FirebaseDatabase.instance.ref("forum_posts");
   final _reportDb = FirebaseDatabase.instance.ref("forum_reports");
-  final _notificationDb = FirebaseDatabase.instance.ref("notifications"); // Thêm
+  final _notificationDb = FirebaseDatabase.instance.ref("notifications"); 
 
   void _listenPosts() {
   _db.onValue.listen((event) {
@@ -54,13 +54,12 @@ class ForumPostNotifier extends StateNotifier<List<ForumPost>> {
     });
   }
 
-  // Xóa bài viết (soft delete + lưu lý do nếu moderator)
   Future<void> deletePost({
     required ForumPost post,
     required String deletedByUserId,
     String? reason,
   }) async {
-    // Cập nhật bài viết: soft delete
+
     await _db.child(post.postId).update({
       "isDeleted": true,
       "deletedBy": deletedByUserId,
@@ -68,10 +67,9 @@ class ForumPostNotifier extends StateNotifier<List<ForumPost>> {
       "deletedAt": DateTime.now().toIso8601String(),
     });
 
-    // Tạo thông báo cho chủ bài viết
     final notificationRef = _notificationDb.push();
     await notificationRef.set({
-      "userId": post.userId, // gửi cho người sở hữu bài viết
+      "userId": post.userId, 
       "type": "post_deleted",
       "postId": post.postId,
       "deletedBy": deletedByUserId,
@@ -81,17 +79,14 @@ class ForumPostNotifier extends StateNotifier<List<ForumPost>> {
     });
   }
 
-  // Pin/Unpin bài viết
   Future<void> togglePin(String id, bool pin) async {
     await _db.child(id).update({"isPinned": pin});
   }
 
-  // Lock/Unlock bài viết
   Future<void> toggleLock(String id, bool lock) async {
     await _db.child(id).update({"isLocked": lock});
   }
 
-  // Báo cáo bài viết
   Future<void> reportPost(String postId, String reason) async {
     final newReportRef = _reportDb.push();
     await newReportRef.set({

@@ -7,7 +7,7 @@ class Comment {
   final String content;
   final DateTime createdAt;
   final List<String> likes; 
-
+  final bool deleted;
   Comment({
     required this.commentId,
     required this.postId,
@@ -17,6 +17,7 @@ class Comment {
     required this.content,
     required this.createdAt,
     List<String>? likes,
+    this.deleted = false,
   }) : likes = likes ?? [];
 
   Comment copyWith({
@@ -38,6 +39,7 @@ class Comment {
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       likes: likes ?? List<String>.from(this.likes),
+      
     );
   }
 
@@ -52,6 +54,7 @@ class Comment {
         "content": content,
         "createdAt": createdAt.toIso8601String(),
         "likes": likes,
+        'deleted': deleted,
       };
 
   factory Comment.fromJson(Map<dynamic, dynamic> json) {
@@ -64,6 +67,7 @@ class Comment {
       content: json["content"],
       createdAt: DateTime.parse(json["createdAt"]),
       likes: (json["likes"] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      deleted: json['deleted'] ?? false,
     );
   }
 }

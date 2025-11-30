@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
 import 'package:learningmanagement/screens/documents/document_list_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
+import 'package:learningmanagement/screens/forum_screens/moderator_report_screen.dart';
 
 class ModeratorNav extends StatefulWidget {
   const ModeratorNav({super.key});
@@ -16,6 +17,7 @@ class _ModeratorNavState extends State<ModeratorNav> {
   final screens = [
     const ForumScreen(),
     const DocumentListScreen(),
+    const ModeratorReportScreen(),
     const ProfileScreen(),
   ];
 
@@ -23,13 +25,30 @@ class _ModeratorNavState extends State<ModeratorNav> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: screens[index],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: index,
-        onTap: (i) => setState(() => index = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: "Diễn đàn"),
-          BottomNavigationBarItem(icon: Icon(Icons.admin_panel_settings), label: "Quản lý"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: index,
+        onDestinationSelected: (i) => setState(() => index = i),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.forum_outlined),
+            selectedIcon: Icon(Icons.forum),
+            label: "Forum",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.document_scanner),
+            label: "Document",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.report),
+            label: "Report",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: "Profile",
+          ),
         ],
       ),
     );
