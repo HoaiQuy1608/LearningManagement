@@ -8,7 +8,7 @@ import '../../providers/comment_provider.dart' as cp;
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   final ForumPost post;
-  final String? scrollToCommentId; // Thêm tham số này
+  final String? scrollToCommentId; 
 
   const PostDetailScreen({
     required this.post,
@@ -39,9 +39,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final index = visibleComments.indexWhere((c) => c.commentId == commentId);
 
     if (index != -1) {
-      // 100.0 là ước lượng chiều cao mỗi comment tile
       _scrollController.animateTo(
-        250.0 + index * 100.0, // 250.0 là khoảng PostCard + tiêu đề + divider
+        250.0 + index * 100.0, 
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );

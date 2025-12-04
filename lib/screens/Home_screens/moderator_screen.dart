@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
 import 'package:learningmanagement/screens/documents/document_list_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
-import 'package:learningmanagement/screens/forum_screens/moderator_report_screen.dart';
+import 'package:learningmanagement/screens/report/moderator_report_screen.dart';
 
 class ModeratorNav extends StatefulWidget {
   const ModeratorNav({super.key});

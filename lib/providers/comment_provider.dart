@@ -74,7 +74,6 @@ Future<void> reportComment(String commentId, String reason) async {
   final authState = ref.read(authProvider);
   if (authState.userId == null) return;
 
-  // Gọi service để lưu báo cáo
   await _service.reportComment(
     postId: postId,
     commentId: commentId,
