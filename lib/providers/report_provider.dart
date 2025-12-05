@@ -75,17 +75,40 @@ final commentReportProvider =
   });
 });
 
-final commentContentProvider =
-    FutureProvider.family<String, Map<String, String>>((ref, data) async {
-  final postId = data["postId"]!;
-  final commentId = data["commentId"]!;
+final commentContentProvider = FutureProvider.family<
+    String,
+    (String postId, String commentId)
+>((ref, params) async {
 
-  final snap =
-      await FirebaseDatabase.instance.ref("comments/$postId/$commentId").get();
+  final (postId, commentId) = params;
 
-  if (!snap.exists) return "[Bình luận đã bị xoá]";
+  final snap = await FirebaseDatabase.instance
+      .ref("comments/$postId/$commentId")
+      .get();
 
-  final m = Map<String, dynamic>.from(snap.value as Map);
-  return m["content"] ?? "[Không có nội dung]";
+  if (!snap.exists) return "[Bình luận không còn tồn tại]";
+
+  final data = snap.value as Map?;
+  return data?["content"] ?? "[Không có nội dung]";
 });
+
+final updateReportStatusProvider =
+    Provider<Function({required String reportId, required String type, required String status})>((ref) {
+  return ({
+    required String reportId,
+    required String type,
+    required String status,
+  }) async {
+    final db = FirebaseDatabase.instance.ref();
+    await db.child("$type/$reportId").update({
+      "status": status,
+    });
+
+    ref.invalidate(commentReportProvider);
+    ref.invalidate(postReportProvider);
+  };
+});
+
+
+
 

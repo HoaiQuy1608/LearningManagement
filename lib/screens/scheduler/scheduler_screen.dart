@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:learningmanagement/screens/scheduler/add_event_screen.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:learningmanagement/providers/scheduler_provider.dart';
 import 'package:learningmanagement/screens/scheduler/event_detail_screen.dart';
@@ -182,6 +183,17 @@ class _SchedulerScreenState extends ConsumerState<SchedulerScreen> {
           ),
         ],
       ),
+      // === NÚT THÊM SỰ KIỆN ===
+  floatingActionButton: FloatingActionButton(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AddEventScreen()),
+      );
+    },
+    backgroundColor: Theme.of(context).primaryColor,
+    child: const Icon(Icons.add, size: 32),
+  ),
     );
   }
 }

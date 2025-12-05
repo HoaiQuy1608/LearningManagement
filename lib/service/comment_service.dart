@@ -183,4 +183,24 @@ class CommentService {
       yield replies;
     }
   }
+
+  Future<void> resolveCommentReport(String commentId, String postId) async {
+  final db = FirebaseDatabase.instance.ref("commentReports");
+
+  final snapshot = await db.get();
+  if (!snapshot.exists) return;
+
+  final data = snapshot.value as Map;
+
+  data.forEach((reportId, reportData) {
+    if (reportData["commentId"] == commentId &&
+        reportData["postId"] == postId) {
+      db.child(reportId).update({
+        "status": "resolved",
+        "resolvedAt": DateTime.now().toIso8601String(),
+      });
+    }
+  });
+}
+
 }

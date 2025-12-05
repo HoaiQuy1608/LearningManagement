@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:learningmanagement/providers/report_provider.dart';
 import '../models/comment_model.dart';
 import '../service/comment_service.dart';
 import 'auth_provider.dart';
@@ -44,18 +45,22 @@ class CommentNotifier extends StateNotifier<List<Comment>> {
   }
 
   Future<void> deleteComment(String commentId) async {
-    final authState = ref.read(authProvider);
-    if (authState.userId == null) return;
+  final authState = ref.read(authProvider);
+  if (authState.userId == null) return;
 
-    await _service.updateComment(
-      postId,
-      commentId,
-      {
-        "deleted": true,
-        "deletedAt": DateTime.now().toIso8601String(),
-      },
-    );
-  }
+  await _service.updateComment(
+    postId,
+    commentId,
+    {
+      "deleted": true,
+      "deletedAt": DateTime.now().toIso8601String(),
+    },
+  );
+  await _service.resolveCommentReport(commentId, postId);
+
+  ref.invalidate(commentReportProvider);
+}
+
 
   Future<void> editComment(String commentId, String newContent) async {
     final authState = ref.read(authProvider);

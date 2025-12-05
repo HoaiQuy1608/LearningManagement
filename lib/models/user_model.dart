@@ -4,19 +4,15 @@ class UserModel {
   final String uid;
   final String email;
   final UserRole role;
-  // Thông tin cá nhân
   final String? displayName;
   final String? avatarUrl;
   final String? phoneNumber;
-  // Trạng thái tài khoản
   final bool isActive;
   final bool isEmailVerified;
-  // Thời gian
   final DateTime createdAt;
   final DateTime? lastLoginAt;
-  // Dành riêng theo vai trò
-  final String? studentId; // Dành cho sinh viên
-  final String? department; // Dành cho giảng viên, trợ giảng
+  final String? studentId; 
+  final String? department; 
   // Dành cho thông báo đẩy
   final String? fcmToken;
 

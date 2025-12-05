@@ -9,14 +9,8 @@ import 'comment_footer.dart';
 class CommentTile extends ConsumerWidget {
   final String postId;
   final String commentId;
-  final bool highlight;
 
-  const CommentTile({
-    required this.postId,
-    required this.commentId,
-    this.highlight= false, 
-    super.key
-    });
+  const CommentTile({required this.postId, required this.commentId, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
