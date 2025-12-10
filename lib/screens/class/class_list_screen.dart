@@ -15,9 +15,30 @@ class ClassListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lớp Học Của Tôi'),
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.search))],
+      title: const Text(
+        'Lớp Học Của Tôi',
+        style: TextStyle(fontWeight: FontWeight.bold),
       ),
+      centerTitle: true,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.white,
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.search),
+        ),
+      ],
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)], 
+            begin: Alignment.topLeft,
+            end: Alignment.topRight,
+          ),
+        ),
+      ),
+    ),
       body: classState.isLoading
           ? const Center(child: CircularProgressIndicator())
           : myClasses.isEmpty
@@ -67,17 +88,24 @@ class ClassListScreen extends ConsumerWidget {
               },
             ),
       floatingActionButton: myClasses.isNotEmpty
-          ? FloatingActionButton(
-              backgroundColor: Theme.of(context).primaryColor,
-              child: const Icon(Icons.add),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CreateClassScreen()),
-                );
-              },
-            )
-          : null,
+      ? FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreateClassScreen()),
+            );
+          },
+          backgroundColor: const Color(0xFF7C4DFF),
+          foregroundColor: Colors.white,
+          elevation: 8,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text(
+            "Tạo lớp học",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        )
+      : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, 
     );
   }
 }

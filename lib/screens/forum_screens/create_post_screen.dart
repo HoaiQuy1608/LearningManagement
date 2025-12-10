@@ -37,7 +37,25 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.editPost != null ? "Chỉnh sửa bài viết" : "Tạo bài viết")),
+      appBar: AppBar(
+      title: Text(
+        widget.editPost != null ? "Chỉnh sửa bài viết" : "Tạo bài viết",
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      centerTitle: true,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.white, 
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)], 
+            begin: Alignment.topLeft,
+            end: Alignment.topRight,
+          ),
+        ),
+      ),
+    ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

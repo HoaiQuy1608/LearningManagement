@@ -4,7 +4,7 @@ import 'package:learningmanagement/providers/auth_provider.dart';
 import 'package:learningmanagement/providers/user_provider.dart';
 import 'package:learningmanagement/screens/Admin_screens/UserManagement/user_management.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
-import 'admin_home.dart';
+import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
 
 class AdminMainScreen extends ConsumerStatefulWidget {
   const AdminMainScreen({super.key});
@@ -37,7 +37,7 @@ class _AdminMainScreenState extends ConsumerState<AdminMainScreen> {
   Widget build(BuildContext context) {
     final users = ref.watch(userProvider);
     final pages = [
-      const AdminHome(),
+      const ForumScreen(),
       UserManagementScreen(
         users: users,
         onToggleActive: _onToggleActive,

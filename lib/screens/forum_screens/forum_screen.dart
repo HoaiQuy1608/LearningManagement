@@ -14,8 +14,21 @@ class ForumScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Forum"),
+        title: const Text(
+          "Diễn đàn",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         centerTitle: true,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)], 
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
+            ),
+          ),
+        ),
       ),
       body: posts.isEmpty
           ? const Center(child: Text("Không có bài viết nào"))
@@ -34,14 +47,20 @@ class ForumScreen extends ConsumerWidget {
                 child: PostCard(post: posts[i]),
               ),
             ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) =>  CreatePostScreen()),
+            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
           );
         },
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFF6A5AE0), 
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.edit_rounded),
+        label: const Text(
+          "Viết bài",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }

@@ -54,9 +54,24 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chi tiết bài viết"),
-        centerTitle: true,
+      title: const Text(
+        "Chi tiết bài viết",
+        style: TextStyle(fontWeight: FontWeight.bold),
       ),
+      centerTitle: true,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.white, 
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)], 
+            begin: Alignment.topLeft,
+            end: Alignment.topRight,
+          ),
+        ),
+      ),
+    ),
       body: Column(
         children: [
           Expanded(

@@ -12,42 +12,52 @@ class ModeratorNav extends StatefulWidget {
 }
 
 class _ModeratorNavState extends State<ModeratorNav> {
-  int index = 0;
+  int currentIndex = 0;
 
-  final screens = [
-    const ForumScreen(),
-    const DocumentListScreen(),
-    const ModeratorReportScreen(),
-    const ProfileScreen(),
+  final List<Widget> screens = [
+    const ForumScreen(),                                   
+    const DocumentListScreen(),             
+    const ModeratorReportScreen(),                       
+    const ProfileScreen(),                                 
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: screens[index],
+      body: IndexedStack(
+        index: currentIndex,
+        children: screens,
+      ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (i) => setState(() => index = i),
+        height: 68,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 12,
+        shadowColor: Colors.purple.withOpacity(0.15),
+        indicatorColor: const Color(0xFF7C4DFF).withOpacity(0.25),
+        selectedIndex: currentIndex,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        onDestinationSelected: (int i) => setState(() => currentIndex = i),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.forum_outlined),
-            selectedIcon: Icon(Icons.forum),
-            label: "Forum",
+            selectedIcon: Icon(Icons.forum_rounded),
+            label: 'Diễn đàn',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.document_scanner),
-            label: "Document",
+            icon: Icon(Icons.description_outlined),
+            selectedIcon: Icon(Icons.description_rounded),
+            label: 'Tài liệu',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.report),
-            label: "Report",
+            icon: Icon(Icons.flag_outlined),
+            selectedIcon: Icon(Icons.flag_rounded),
+            label: 'Báo cáo',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: "Profile",
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Cá nhân',
           ),
         ],
       ),

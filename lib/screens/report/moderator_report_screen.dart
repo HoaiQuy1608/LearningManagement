@@ -86,10 +86,27 @@ class _ModeratorReportScreenState extends ConsumerState<ModeratorReportScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Quản lý báo cáo"),
+        title: const Text(
+          "Quản lý báo cáo",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)],
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
+            ),
+          ),
+        ),
         bottom: TabBar(
           controller: tab,
           labelColor: Theme.of(context).primaryColor,
+          unselectedLabelColor: Colors.white,
           tabs: const [
             Tab(text: "Comment Report"),
             Tab(text: "Post Report"),

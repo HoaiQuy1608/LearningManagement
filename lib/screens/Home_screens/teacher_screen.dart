@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:learningmanagement/screens/Quiz_screens/quiz_list_screen.dart';
 import 'package:learningmanagement/screens/authentication/profile_screen.dart';
-import 'package:learningmanagement/screens/documents/upload_document_screen.dart';
+import 'package:learningmanagement/screens/documents/document_list_screen.dart';
 import 'package:learningmanagement/screens/forum_screens/forum_screen.dart';
 import 'package:learningmanagement/screens/class/class_list_screen.dart';
 
@@ -19,8 +19,8 @@ class _TeacherNavState extends State<TeacherNav> {
     const ForumScreen(),
     const ClassListScreen(),
     const QuizListScreen(),
+    const DocumentListScreen(),
     const ProfileScreen(),
-    const UploadDocumentScreen(),
   ];
 
   @override
@@ -37,21 +37,25 @@ class _TeacherNavState extends State<TeacherNav> {
             label: "Forum",
           ),
           NavigationDestination(
+            icon: Icon(Icons.class_outlined),
+            selectedIcon: Icon(Icons.class_),
+            label: "Class",
+          ),
+          NavigationDestination(
             icon: Icon(Icons.quiz_outlined),
             selectedIcon: Icon(Icons.quiz),
-            label: "Class",
+            label: "Quiz",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.edit_document),
+            selectedIcon: Icon(Icons.edit_document),
+            label: "Tài liệu",
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
             label: "Profile",
           ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.document_scanner),
-            label: "Document",
-          ),
-
         ],
       ),
     );

@@ -28,7 +28,23 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Upload Document")),
+      appBar: AppBar(
+        title: const Text(
+          "Tải lên tài liệu",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)], 
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
+            ),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final file = await FilePickerUtil.pickDocument();

@@ -34,7 +34,6 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
     'Pháp luật',
     'Toán',
   ];
-
   @override
   void dispose() {
     _titleController.dispose();
@@ -99,9 +98,24 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(quizProvider).isLoading;
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Tạo Quiz mới')),
+      appBar: AppBar(
+        title: const Text(
+          "Tạo quiz mới",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)], 
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
+            ),
+          ),
+        ),
+      ),
       body: Stack(
         children: [
           SingleChildScrollView(

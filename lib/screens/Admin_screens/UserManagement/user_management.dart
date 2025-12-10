@@ -36,7 +36,24 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Quản lý người dùng"),
+        title: const Text(
+          "Quản lý người dùng",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)],
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -47,6 +64,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 prefixIcon: Icon(Icons.search),
                 hintText: "Tìm kiếm theo tên hoặc email",
                 border: OutlineInputBorder(),
+                filled: true,
+                fillColor: Colors.white,
               ),
               onChanged: (val) => setState(() => _searchText = val.trim()),
             ),
@@ -80,7 +99,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => Scaffold(
-                          appBar: AppBar(title: const Text("Chi tiết người dùng")),
+                          appBar: AppBar(
+                            title: const Text("Chi tiết người dùng"),
+                          ),
                           body: UserDetailPanel(
                             user: user,
                             onToggleActive: () => widget.onToggleActive(user.uid),

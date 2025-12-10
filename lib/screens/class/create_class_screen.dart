@@ -55,7 +55,23 @@ class _CreateClassScreenState extends ConsumerState<CreateClassScreen> {
     final isLoading = ref.watch(classProvider).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tạo Lớp Học Mới')),
+      appBar: AppBar(
+        title: const Text(
+          "Tạo lớp học mới",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)], 
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
+            ),
+          ),
+        ),
+      ),
       body: Stack(
         children: [
           SingleChildScrollView(

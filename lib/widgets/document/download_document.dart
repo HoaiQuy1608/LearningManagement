@@ -21,7 +21,7 @@ class _DocumentDownloadButtonState extends State<DocumentDownloadButton> {
   @override
   void initState() {
     super.initState();
-    downloadCount = widget.doc.downloadCount ?? 0;
+    downloadCount = widget.doc.downloadCount ;
   }
 
   @override

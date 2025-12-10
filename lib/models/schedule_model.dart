@@ -6,7 +6,6 @@ class ScheduleModel {
   final String? description;
   final DateTime startTime;
   final DateTime? endTime;
-  // mau hien thi tren lich
   final String color;
   final ScheduleType type;
   final String? reminder;
