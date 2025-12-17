@@ -153,7 +153,7 @@ class AuthProvider extends Notifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       await _auth.sendPasswordResetEmail(email: email.trim());
-      state = state.copyWith(isLoading: true, errorMessage: null);
+      state = state.copyWith(isLoading: false, errorMessage: null);
       return true;
     } on FirebaseAuthException catch (e) {
       state = state.copyWith(

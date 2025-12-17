@@ -2,31 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:learningmanagement/models/question_model.dart';
+import 'package:learningmanagement/models/quiz_model.dart';
 import 'package:learningmanagement/providers/quiz_provider.dart';
 import 'package:learningmanagement/widgets/quizs/added_question_item.dart';
 import 'package:learningmanagement/screens/Quiz_screens/add_question_screen.dart';
 
-class CreateQuizScreen extends ConsumerStatefulWidget {
-  const CreateQuizScreen({super.key});
+class EditQuizScreen extends ConsumerStatefulWidget {
+  final Quiz quiz;
+  const EditQuizScreen({super.key, required this.quiz});
 
   @override
-  ConsumerState<CreateQuizScreen> createState() => _CreateQuizScreenState();
+  ConsumerState<EditQuizScreen> createState() => _EditQuizScreenState();
 }
 
-class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
+class _EditQuizScreenState extends ConsumerState<EditQuizScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _timeLimitController = TextEditingController();
-  final _questionCountController = TextEditingController(text: '0');
-  final _maxAttemptController = TextEditingController(text: '3');
+  late TextEditingController _titleController;
+  late TextEditingController _timeLimitController;
+  late TextEditingController _questionCountController;
+  late TextEditingController _maxAttemptController;
 
-  String _selectedSubject = 'Lập trình';
-  String _visibility = 'Public';
-  bool _randomQuestions = false;
-  bool _randomAnswers = false;
-  bool _allowRetake = false;
+  late String _selectedSubject;
+  late String _visibility;
+  late bool _randomQuestions;
+  late bool _randomAnswers;
+  late bool _allowRetake;
+  late List<Question> _questions;
 
-  final List<Question> _questions = [];
   final List<String> _subjects = [
     'Lập trình',
     'Kinh tế',
@@ -34,6 +36,48 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
     'Pháp luật',
     'Toán',
   ];
+
+  final List<String> _visibilityOptions = ['Public', 'Private', 'Class'];
+
+  @override
+  void initState() {
+    super.initState();
+    final q = widget.quiz;
+
+    _titleController = TextEditingController(text: q.title);
+    _timeLimitController = TextEditingController(text: q.timeLimit.toString());
+    _questionCountController = TextEditingController(
+      text: q.questions.length.toString(),
+    );
+    _maxAttemptController = TextEditingController(
+      text: q.maxAttempt.toString(),
+    );
+
+    if (_subjects.contains(q.subject)) {
+      _selectedSubject = q.subject;
+    } else {
+      _selectedSubject = _subjects.first;
+    }
+
+    String normalizedVis = q.visibility;
+    if (normalizedVis.isNotEmpty) {
+      normalizedVis =
+          normalizedVis[0].toUpperCase() +
+          normalizedVis.substring(1).toLowerCase();
+    }
+    if (_visibilityOptions.contains(normalizedVis)) {
+      _visibility = normalizedVis;
+    } else if (_visibilityOptions.contains(q.visibility)) {
+      _visibility = q.visibility;
+    } else {
+      _visibility = 'Public';
+    }
+    _randomQuestions = q.randomQuestions;
+    _randomAnswers = q.randomAnswers;
+    _allowRetake = q.maxAttempt > 1;
+    _questions = List.from(q.questions);
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -43,17 +87,30 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
     super.dispose();
   }
 
-  Future<void> _navigateToAddQuestion() async {
-    final Question? newQuestion = await Navigator.push(
+  Future<void> _navigateToQuestionEditor({
+    Question? questionToEdit,
+    int? index,
+  }) async {
+    final Question? result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AddQuestionScreen()),
+      MaterialPageRoute(
+        builder: (context) => AddQuestionScreen(questionToEdit: questionToEdit),
+      ),
     );
-    if (newQuestion != null) {
-      setState(() => _questions.add(newQuestion));
+
+    if (result != null) {
+      setState(() {
+        if (questionToEdit != null && index != null) {
+          _questions[index] = result;
+        } else {
+          _questions.add(result);
+        }
+        _questionCountController.text = _questions.length.toString();
+      });
     }
   }
 
-  Future<void> _handleSaveQuiz() async {
+  Future<void> _handleUpdateQuiz() async {
     if (!_formKey.currentState!.validate()) return;
     if (_questions.isEmpty) {
       ScaffoldMessenger.of(
@@ -61,6 +118,7 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
       ).showSnackBar(const SnackBar(content: Text('Chưa có câu hỏi nào')));
       return;
     }
+
     int finalMaxAttempt = 1;
     if (_allowRetake) {
       final val = int.tryParse(_maxAttemptController.text);
@@ -72,26 +130,34 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
       }
       finalMaxAttempt = val;
     }
-    await ref
+
+    final error = await ref
         .read(quizProvider.notifier)
-        .createQuiz(
+        .updateQuiz(
+          quizId: widget.quiz.quizId,
           title: _titleController.text.trim(),
           subject: _selectedSubject,
-          description: '',
-          visibility: 'Public',
+          description: widget.quiz.description,
+          visibility: _visibility,
           timeLimit: int.tryParse(_timeLimitController.text) ?? 0,
           questions: _questions,
-          allowRetake: _allowRetake,
           randomQuestions: _randomQuestions,
           randomAnswers: _randomAnswers,
           showAnswer: true,
           maxAttempt: finalMaxAttempt,
         );
+
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Đã lưu Quiz!')));
-      Navigator.pop(context);
+      if (error == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đã cập nhật Quiz!')));
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
+      }
     }
   }
 
@@ -101,7 +167,7 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Tạo quiz mới",
+          "Chỉnh sửa Quiz",
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
@@ -110,8 +176,6 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFF6A5AE0), Color(0xFF8A63D2)],
-              begin: Alignment.topLeft,
-              end: Alignment.topRight,
             ),
           ),
         ),
@@ -125,7 +189,15 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader('Thông tin chung'),
+                  const Text(
+                    'Thông tin chung',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(
@@ -136,46 +208,30 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                         v!.isEmpty ? 'Vui lòng nhập tiêu đề' : null,
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField(
-                          initialValue: _selectedSubject,
-                          decoration: const InputDecoration(
-                            labelText: 'Môn học',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: _subjects
-                              .map(
-                                (s) =>
-                                    DropdownMenuItem(value: s, child: Text(s)),
-                              )
-                              .toList(),
-                          onChanged: (v) {
-                            setState(() => _selectedSubject = v!);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _timeLimitController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          decoration: const InputDecoration(
-                            labelText: 'Thời gian (phút)',
-                            border: OutlineInputBorder(),
-                            suffixText: 'phút',
-                          ),
-                          validator: (v) =>
-                              v!.isEmpty ? 'Nhập thời gian' : null,
-                        ),
-                      ),
-                    ],
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedSubject,
+                    decoration: const InputDecoration(
+                      labelText: 'Môn học',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _subjects
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedSubject = v!),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _timeLimitController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: const InputDecoration(
+                      labelText: 'Thời gian',
+                      border: OutlineInputBorder(),
+                      suffixText: 'phút',
+                    ),
+                    validator: (v) => v!.isEmpty ? 'Nhập thời gian' : null,
+                  ),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     initialValue: _visibility,
                     decoration: const InputDecoration(
@@ -183,13 +239,21 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.public),
                     ),
-                    items: ['Public', 'Private', 'Class']
+                    items: _visibilityOptions
                         .map((v) => DropdownMenuItem(value: v, child: Text(v)))
                         .toList(),
                     onChanged: (v) => setState(() => _visibility = v!),
                   ),
 
-                  _buildHeader('Cấu hình Quiz'),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Cấu hình Quiz',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
                   SwitchListTile(
                     title: const Text('Đảo câu hỏi'),
                     value: _randomQuestions,
@@ -222,7 +286,6 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                           hintText: 'VD: 3',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.repeat),
-                          helperText: 'Nhập số lần làm bài',
                         ),
                         validator: (v) {
                           if (!_allowRetake) return null;
@@ -234,13 +297,21 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                         },
                       ),
                     ),
+
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildHeader('Danh sách câu hỏi (${_questions.length})'),
+                      Text(
+                        'Danh sách câu hỏi (${_questions.length})',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
                       TextButton.icon(
-                        onPressed: _navigateToAddQuestion,
+                        onPressed: () => _navigateToQuestionEditor(),
                         icon: const Icon(Icons.add),
                         label: const Text('Thêm'),
                       ),
@@ -255,7 +326,7 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
-                        'Chưa có câu hỏi nào được thêm vào',
+                        'Chưa có câu hỏi nào',
                         style: TextStyle(color: Colors.grey),
                       ),
                     )
@@ -267,16 +338,23 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                       separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final q = _questions[index];
-                        return AddedQuestionItem(
-                          index: index,
-                          question: q,
-                          onDelete: () {
-                            setState(() {
-                              _questions.removeAt(index);
-                              _questionCountController.text = _questions.length
-                                  .toString();
-                            });
-                          },
+                        return InkWell(
+                          onTap: () => _navigateToQuestionEditor(
+                            questionToEdit: q,
+                            index: index,
+                          ),
+                          child: AddedQuestionItem(
+                            index: index,
+                            question: q,
+                            onDelete: () {
+                              setState(() {
+                                _questions.removeAt(index);
+                                _questionCountController.text = _questions
+                                    .length
+                                    .toString();
+                              });
+                            },
+                          ),
                         );
                       },
                     ),
@@ -295,27 +373,13 @@ class _CreateQuizScreenState extends ConsumerState<CreateQuizScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: isLoading ? null : _handleSaveQuiz,
-                  child: const Text('Lưu Quiz'),
+                  onPressed: isLoading ? null : _handleUpdateQuiz,
+                  child: const Text('Lưu thay đổi'),
                 ),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.blueGrey,
-        ),
       ),
     );
   }

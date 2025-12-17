@@ -73,7 +73,7 @@ class QuizNotifier extends Notifier<QuizState> {
     required String visibility,
     required int timeLimit,
     required int maxAttempt,
-    required bool allowRetake, // Tham số từ UI
+    required bool allowRetake,
     required bool randomQuestions,
     required bool randomAnswers,
     required bool showAnswer,
@@ -113,6 +113,129 @@ class QuizNotifier extends Notifier<QuizState> {
     } finally {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  Future<String?> updateQuiz({
+    required String quizId,
+    required String title,
+    required String description,
+    required String subject,
+    required String visibility,
+    required int timeLimit,
+    required int maxAttempt,
+    required bool randomQuestions,
+    required bool randomAnswers,
+    required bool showAnswer,
+    required List<Question> questions,
+  }) async {
+    final currentUserId = ref.read(authProvider).userId;
+    if (currentUserId == null) return 'Chưa đăng nhập';
+    final quiz = state.quizzes.firstWhere(
+      (q) => q.quizId == quizId,
+      orElse: () => Quiz(
+        quizId: '',
+        creatorId: '',
+        title: '',
+        description: '',
+        subject: '',
+        visibility: '',
+        status: '',
+        timeLimit: 0,
+        maxAttempt: 0,
+        randomQuestions: false,
+        randomAnswers: false,
+        showAnswer: false,
+        createdAt: DateTime.now(),
+        tags: [],
+        questions: [],
+      ),
+    );
+    if (quiz.quizId.isEmpty) return 'Không tìm thấy Quiz';
+    if (quiz.creatorId != currentUserId)
+      return 'Bạn không có quyền sửa Quiz này';
+    state = state.copyWith(isLoading: true);
+    try {
+      String status = (visibility == 'public') ? 'pending_review' : 'approved';
+      final updatedQuiz = Quiz(
+        quizId: quizId,
+        creatorId: currentUserId,
+        classId: quiz.classId,
+        title: title,
+        description: description,
+        subject: subject,
+        tags: quiz.tags,
+        visibility: visibility,
+        status: status,
+        timeLimit: timeLimit,
+        maxAttempt: maxAttempt,
+        randomQuestions: randomQuestions,
+        randomAnswers: randomAnswers,
+        showAnswer: showAnswer,
+        createdAt: quiz.createdAt,
+        questions: questions,
+      );
+      await _db.child('quizzes').child(quizId).set(updatedQuiz.toJson());
+      print('Đã cập nhật quiz: $quizId');
+      return null;
+    } catch (e) {
+      print('Lỗi sửa quiz: $e');
+      return 'Lỗi: $e';
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  Future<void> hideQuiz(String quizId) async {
+    final currentUserId = ref.read(authProvider).userId;
+    if (currentUserId == null) return;
+
+    final quiz = state.quizzes.firstWhere(
+      (q) => q.quizId == quizId,
+      orElse: () => Quiz(
+        quizId: '',
+        creatorId: '',
+        title: '',
+        description: '',
+        subject: '',
+        visibility: '',
+        status: '',
+        timeLimit: 0,
+        maxAttempt: 0,
+        randomQuestions: false,
+        randomAnswers: false,
+        showAnswer: false,
+        createdAt: DateTime.now(),
+        tags: [],
+        questions: [],
+      ),
+    );
+    if (quiz.quizId.isEmpty || quiz.creatorId != currentUserId) {
+      print('Không có quyền ẩn Quiz này');
+      return;
+    }
+    try {
+      await _db.child('quizzes').child(quizId).update({
+        'visibility': 'private',
+        'status': 'approved',
+      });
+      print('Đã ẩn quiz: $quizId');
+    } catch (e) {
+      print('Lỗi ẩn quiz: $e');
+    }
+  }
+
+  Future<void> toggleVisibility(String quizId) async {
+    final currentUserId = ref.read(authProvider).userId;
+    final quiz = state.quizzes.firstWhere((q) => q.quizId == quizId);
+    if (quiz.creatorId != currentUserId) return;
+    String newVisibility = (quiz.visibility == 'public') ? 'private' : 'public';
+    String newStatus = (newVisibility == 'public')
+        ? 'pending_review'
+        : 'approved';
+    await _db.child('quizzes').child(quizId).update({
+      'visibility': newVisibility,
+      'status': newStatus,
+    });
   }
 
   Future<void> assignQuizToClass(String quizId, String classId) async {
